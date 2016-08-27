@@ -103,6 +103,23 @@ static int ishex(int x)
     );
 }
 
+static unsigned char chrnib(char c)
+{
+    if((c >= '0') && (c <= '9'))
+    {
+        return (c - '0');
+    }
+    if((c >= 'a') && (c <= 'f'))
+    {
+        return (c - 'a' + 10);
+    }
+    if((c >= 'A') && (c <= 'F'))
+    {
+        return (c - 'A' + 10);
+    }
+    return 255;
+}
+
 static char rot13_char(int c)
 {
     int alpha;
@@ -204,16 +221,6 @@ static size_t btf_rot13(char* buf, const char* inp, size_t len, const char** com
     return 1;
 }
 
-static size_t btf_hexencode(char* buf, const char* inp, size_t len, const char** comargs)
-{
-    (void)comargs;
-    (void)len;
-    unsigned char byte = (unsigned char)(inp[0]);
-    buf[0] = hex_table[byte >> 4];
-    buf[1] = hex_table[byte & 0x0f];
-    return 2;
-}
-
 static size_t btf_htmlenc(char* buf, const char* inp, size_t len, const char** comargs)
 {
     int ch;
@@ -228,6 +235,26 @@ static size_t btf_htmlenc(char* buf, const char* inp, size_t len, const char** c
     */
     cnt = snprintf(buf, kMaxOutSize - 1, "&#%d;", (int)((unsigned char)ch));
     return cnt;
+}
+
+static size_t btf_hexencode(char* buf, const char* inp, size_t len, const char** comargs)
+{
+    (void)comargs;
+    (void)len;
+    unsigned char byte = (unsigned char)(inp[0]);
+    buf[0] = hex_table[byte >> 4];
+    buf[1] = hex_table[byte & 0x0f];
+    return 2;
+}
+
+static size_t btf_hexdecode(char* buf, const char* inp, size_t len, const char** comargs)
+{
+    (void)comargs;
+    (void)len;
+    unsigned char* ptr;
+    ptr = (unsigned char*)inp;
+    buf[0] = (chrnib(*inp) << 4) | chrnib(*(inp + 1));
+    return 1;
 }
 
 /* everything below is pretty standard stuff, and fairly self explanatory */
@@ -278,6 +305,11 @@ static const struct btdata_t funcs[] =
     {"hexencode",
         btf_hexencode, 1, 0, 1,
         "hex-encodes input data",
+    },
+
+    {"hexdecode",
+        btf_hexdecode, 2, 0, 1,
+        "decodes hex-encoded input data (input being 2 character hex data)",
     },
 
     /*
