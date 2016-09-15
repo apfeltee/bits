@@ -2,8 +2,9 @@
 #include "private.h"
 #include "entities_generated.h"
 
-void* btf_htmldec_pre()
+void* btf_htmldec_pre(const char** comargs)
 {
+    (void)comargs;
     return NULL;
 }
 
@@ -12,11 +13,10 @@ void btf_htmldec_post(void* ptr)
     (void)ptr;
 }
 
-size_t btf_htmldec_main(char* buf, const char* inp, size_t len, const char** comargs, void* ptr)
+size_t btf_htmldec_main(char* buf, const char* inp, size_t len, void* ptr)
 {
     size_t it;
     (void)len;
-    (void)comargs;
     (void)ptr;
     if(inp[0] == '#')
     {
@@ -34,7 +34,7 @@ size_t btf_htmldec_main(char* buf, const char* inp, size_t len, const char** com
     {
         if(strncmp(html_entities[it].key, inp, len) == 0)
         {
-            strncat(buf, html_entities[it].value, html_entities[it].length);
+            memcpy(buf, html_entities[it].value, html_entities[it].length);
             return html_entities[it].length;
         }
     }

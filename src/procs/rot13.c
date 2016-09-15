@@ -13,8 +13,9 @@ static char rot13_char(int c)
 }
 
 
-void* btf_rot13_pre()
+void* btf_rot13_pre(const char** comargs)
 {
+    (void)comargs;
     return NULL;
 }
 
@@ -23,9 +24,8 @@ void btf_rot13_post(void* ptr)
     (void)ptr;
 }
 
-size_t btf_rot13_main(char* buf, const char* inp, size_t len, const char** comargs, void* ptr)
+size_t btf_rot13_main(char* buf, const char* inp, size_t len, void* ptr)
 {
-    (void)comargs;
     (void)len;
     (void)ptr;
     buf[0] = rot13_char(inp[0]);

@@ -11,8 +11,9 @@ static int ishex(int x)
     );
 }
 
-void* btf_urldecode_pre()
+void* btf_urldecode_pre(const char** comargs)
 {
+    (void)comargs;
     return NULL;
 }
 
@@ -22,10 +23,9 @@ void btf_urldecode_post(void* ptr)
 }
 
 /* there is a slight possibility that there might be a bug here... */
-size_t btf_urldecode_main(char* buf, const char* inp, size_t len, const char** comargs, void* ptr)
+size_t btf_urldecode_main(char* buf, const char* inp, size_t len, void* ptr)
 {
     unsigned int dest;
-    (void)comargs;
     (void)ptr;
     if(!ishex(inp[1]) || !ishex(inp[2]))
     {

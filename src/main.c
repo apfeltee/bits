@@ -1,6 +1,11 @@
 
 #include "private.h"
 
+enum
+{
+    /* argc offset for calculating comargs */
+    ARGCOFS = 2
+};
 
 size_t freaduntil(FILE* stream, char* buffer, size_t bufsize, char until, const char* valids, bool* found)
 {
@@ -53,7 +58,7 @@ const struct btdata_t* btfuncget(const char* term)
     return NULL;
 };
 
-void loopdo(const char* term, FILE* inpfile, FILE* outpfile, const struct btdata_t* fp, const char** comargs, void* uptr)
+void loopdo(const char* term, FILE* inpfile, FILE* outpfile, const struct btdata_t* fp, void* uptr)
 {
     size_t outlen;
     size_t inlen;
@@ -78,7 +83,7 @@ void loopdo(const char* term, FILE* inpfile, FILE* outpfile, const struct btdata
                     rd = freaduntil(inpfile, inbuf, kMaxInSize, fp->ifendswith, fp->validchars, &found);
                     if((rd > 0) && found)
                     {
-                        outlen = fp->funcptr(outbuf, inbuf, rd, comargs, uptr);
+                        outlen = fp->funcptr(outbuf, inbuf, rd, uptr);
                         if(outlen > 0)
                         {
                             fwrite(outbuf, sizeof(char), outlen, outpfile);
@@ -107,7 +112,7 @@ void loopdo(const char* term, FILE* inpfile, FILE* outpfile, const struct btdata
                 inbuf[0] = ch;
                 inlen = fread(inbuf+1, sizeof(char), fp->readthismuch - 1, inpfile);
                 /* fixme: pass userpointer along */
-                outlen = fp->funcptr(outbuf, inbuf, inlen + 1, comargs, uptr);
+                outlen = fp->funcptr(outbuf, inbuf, inlen + 1, uptr);
                 if(outlen > 0)
                 {
                     fwrite(outbuf, sizeof(char), outlen, outpfile);
@@ -125,7 +130,7 @@ void loopdo(const char* term, FILE* inpfile, FILE* outpfile, const struct btdata
             if((inlen == fp->readthismuch) || (inlen > 0))
             {
                 /* fixme: pass userpointer along */
-                outlen = fp->funcptr(outbuf, inbuf, inlen, comargs, uptr);
+                outlen = fp->funcptr(outbuf, inbuf, inlen, uptr);
                 if(outlen > 0)
                 {
                     fwrite(outbuf, sizeof(char), outlen, outpfile);
@@ -173,17 +178,17 @@ int main(int argc, char* argv[])
         term = argv[1];
         if((fp = btfuncget(term)) != NULL)
         {
-            uptr = fp->prefunc();
-            if(argc >= fp->comargs)
+            if((argc - ARGCOFS) >= fp->comargs)
             {
-                loopdo(term, inpfile, outpfile, fp, (argc > 2) ? ((const char**)argv + 2) : NULL, uptr);
+                uptr = fp->prefunc((argc > 2) ? (((const char**)argv) + 2) : NULL);
+                loopdo(term, inpfile, outpfile, fp, uptr);
                 fp->postfunc(uptr);
             }
             else
             {
-                fprintf(stderr, "error: term expected %d additional options, but", fp->comargs);
-                if     ((argc - 2) == 0)          fprintf(stderr, "none given");
-                else if((argc - 2) < fp->comargs) fprintf(stderr, "only %d given", argc - 2);
+                fprintf(stderr, "error: term expected %d additional options, but ", fp->comargs);
+                if     ((argc - ARGCOFS) == 0)          fprintf(stderr, "none given");
+                else if((argc - ARGCOFS) < fp->comargs) fprintf(stderr, "only %d given", (argc - ARGCOFS));
                 fprintf(stderr, "\n");
             }
         }

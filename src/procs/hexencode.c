@@ -1,8 +1,9 @@
 
 #include "private.h"
 
-void* btf_hexencode_pre()
+void* btf_hexencode_pre(const char** comargs)
 {
+    (void)comargs;
     return NULL;
 }
 
@@ -11,9 +12,8 @@ void btf_hexencode_post(void* ptr)
     (void)ptr;
 }
 
-size_t btf_hexencode_main(char* buf, const char* inp, size_t len, const char** comargs, void* ptr)
+size_t btf_hexencode_main(char* buf, const char* inp, size_t len, void* ptr)
 {
-    (void)comargs;
     (void)len;
     (void)ptr;
     unsigned char byte;

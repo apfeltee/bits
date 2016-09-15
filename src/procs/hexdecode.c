@@ -18,8 +18,9 @@ static unsigned char chrnib(char c)
     return 255;
 }
 
-void* btf_hexdecode_pre()
+void* btf_hexdecode_pre(const char** comargs)
 {
+    (void)comargs;
     return NULL;
 }
 
@@ -28,9 +29,8 @@ void btf_hexdecode_post(void* ptr)
     (void)ptr;
 }
 
-size_t btf_hexdecode_main(char* buf, const char* inp, size_t len, const char** comargs, void* ptr)
+size_t btf_hexdecode_main(char* buf, const char* inp, size_t len, void* ptr)
 {
-    (void)comargs;
     (void)len;
     (void)ptr;
     buf[0] = (chrnib(*inp) << 4) | chrnib(*(inp + 1));

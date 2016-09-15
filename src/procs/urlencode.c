@@ -1,8 +1,9 @@
 
 #include "private.h"
 
-void* btf_urlencode_pre()
+void* btf_urlencode_pre(const char** comargs)
 {
+    (void)comargs;
     return NULL;
 }
 
@@ -12,12 +13,11 @@ void btf_urlencode_post(void* ptr)
 }
 
 /* this is a rather greedy algorithm, possibly not RFC compliant */
-size_t btf_urlencode_main(char* buf, const char* inp, size_t len, const char** comargs, void* ptr)
+size_t btf_urlencode_main(char* buf, const char* inp, size_t len, void* ptr)
 {
     int ch;
     size_t cnt;
     (void)len;
-    (void)comargs;
     (void)ptr;
     cnt = 0;
     ch = inp[0];

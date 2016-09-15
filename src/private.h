@@ -8,10 +8,9 @@
 #include <string.h>
 
 #define PROTO(procname) \
-    extern void* btf_##procname##_pre(); \
+    extern void* btf_##procname##_pre(const char** comargs); \
     extern void btf_##procname##_post(void* ptr); \
-    extern size_t btf_##procname##_main(char* buf, const char* inp, size_t len, const char** comargs, void* ptr);
-
+    extern size_t btf_##procname##_main(char* buf, const char* inp, size_t len, void* ptr);
 
 #define MKENTRY(fname, readthismuch, ifbeginswith, ifendswith, delimiter, comargs, buffersize, validchars, description) \
     { \
@@ -29,16 +28,17 @@
         description \
     }
 
+/* these are only allocated once per run, rather than allocating over and over again each loop */
 enum
 {
     /* maximum size of the input buffer */
-    kMaxInSize = 15,
+    kMaxInSize = 512,
 
     /* maximum size of the output buffer */
-    kMaxOutSize = 128,
+    kMaxOutSize = 512,
 };
 
-typedef size_t(*btfunc_t)(
+typedef size_t(*btfunc_main_t)(
     /*
     * output buffer. output should be appended to this buffer
     */
@@ -55,14 +55,20 @@ typedef size_t(*btfunc_t)(
     size_t,
 
     /*
+    * user pointer
+    */
+    void*
+);
+
+typedef void* (*btfunc_pre_t)(
+    /*
     * options passed through the command line. will be NULL if spec does not specify
     * if the verb needs any.
     */
-    const char**,
+    const char**
+);
 
-    /*
-    * user pointer
-    */
+typedef void (*btfunc_post_t)(
     void*
 );
 
@@ -80,9 +86,9 @@ struct btdata_t
     /*
     * destination functions
     */
-    void* (*prefunc)();
-    void (*postfunc)(void*);
-    btfunc_t funcptr;
+    btfunc_pre_t prefunc;
+    btfunc_post_t postfunc;
+    btfunc_main_t funcptr;
 
     /*
     * read at least this much data at once.
@@ -148,16 +154,17 @@ static const char hex_table[] =
 };
 
 /* callback functions */
-PROTO(tolower)
-PROTO(toupper)
-PROTO(trimnull)
-PROTO(urlencode)
-PROTO(urldecode)
-PROTO(rot13)
-PROTO(htmlenc)
-PROTO(htmldec)
-PROTO(hexencode)
-PROTO(hexdecode)
+PROTO(tolower);
+PROTO(toupper);
+PROTO(trimnull);
+PROTO(urlencode);
+PROTO(urldecode);
+PROTO(rot13);
+PROTO(htmlenc);
+PROTO(htmldec);
+PROTO(hexencode);
+PROTO(hexdecode);
+PROTO(replace);
 
 static const struct btdata_t funcs[] =
 {
@@ -260,6 +267,16 @@ static const struct btdata_t funcs[] =
         /*buffersize*/ 50,
         /*validchars*/ NULL,
        "decodes hex-encoded input data (input being 2 character hex data)"),
+
+    MKENTRY(replace, 
+        /*readthismuch*/ 1,
+        /*ifbeginswith*/ 0,
+        /*ifendswith*/ 0,
+        /*delimiter*/ 0,
+        /*comargs*/ 2,
+        /*buffersize*/ 50,
+        /*validchars*/ NULL,
+       "replace one byte with another byte. arguments expected to be numeric or characters"),
 
     {NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0, 0, NULL, NULL},
 };
