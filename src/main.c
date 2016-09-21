@@ -7,7 +7,7 @@ enum
     ARGCOFS = 2
 };
 
-size_t freaduntil(FILE* stream, char* buffer, size_t bufsize, char until, const char* valids, bool* found)
+static size_t freaduntil(FILE* stream, char* buffer, size_t bufsize, char until, const char* valids, bool* found)
 {
     size_t rd;
     int ch;
@@ -45,7 +45,7 @@ size_t freaduntil(FILE* stream, char* buffer, size_t bufsize, char until, const 
     return rd;
 }
 
-const struct btdata_t* btfuncget(const char* term)
+static const struct verbinfo_t* getverb(const char* term)
 {
     size_t i;
     for(i=0; funcs[i].fname != NULL; i++)
@@ -58,21 +58,25 @@ const struct btdata_t* btfuncget(const char* term)
     return NULL;
 };
 
-void loopdo(const char* term, FILE* inpfile, FILE* outpfile, const struct btdata_t* fp, void* uptr)
+static void loopdo(const char* term, FILE* infile, FILE* outfile, const struct verbinfo_t* fp, void* uptr)
 {
     size_t outlen;
     size_t inlen;
     size_t rd;
+    size_t oldlen;
     bool found;
     char ch;
+    char* outbuf;
+    char* inbuf;
     (void)term;
+    oldlen = 0;
+    inbuf = (char*)calloc((fp->readthismuch > kMaxInSize ? (fp->readthismuch + 10) : kMaxInSize) + 1, sizeof(char));
+    outbuf = (char*)calloc(fp->buffersize + kMaxOutSize + 1, sizeof(char));
     while(true)
     {
-        char outbuf[kMaxOutSize + 1] = {0};
-        char inbuf[kMaxInSize + 1] = {0};
         if((fp->validchars != NULL) && (fp->ifbeginswith != 0) && (fp->ifendswith != 0))
         {
-            if((ch = fgetc(inpfile)) == EOF)
+            if((ch = fgetc(infile)) == EOF)
             {
                 return;
             }
@@ -80,29 +84,29 @@ void loopdo(const char* term, FILE* inpfile, FILE* outpfile, const struct btdata
             {
                 if(ch == fp->ifbeginswith)
                 {
-                    rd = freaduntil(inpfile, inbuf, kMaxInSize, fp->ifendswith, fp->validchars, &found);
+                    rd = freaduntil(infile, inbuf, kMaxInSize, fp->ifendswith, fp->validchars, &found);
                     if((rd > 0) && found)
                     {
                         outlen = fp->funcptr(outbuf, inbuf, rd, uptr);
                         if(outlen > 0)
                         {
-                            fwrite(outbuf, sizeof(char), outlen, outpfile);
+                            fwrite(outbuf, sizeof(char), outlen, outfile);
                         }
                     }
                     else
                     {
-                        fwrite(outbuf, sizeof(char), rd, outpfile);
+                        fwrite(outbuf, sizeof(char), rd, outfile);
                     }
                 }
                 else
                 {
-                    fputc(ch, outpfile);
+                    fputc(ch, outfile);
                 }
             }
         }
         else if(fp->ifbeginswith != 0)
         {
-            ch = fgetc(inpfile);
+            ch = fgetc(infile);
             if(ch == EOF)
             {
                 return;
@@ -110,30 +114,28 @@ void loopdo(const char* term, FILE* inpfile, FILE* outpfile, const struct btdata
             if(ch == fp->ifbeginswith)
             {
                 inbuf[0] = ch;
-                inlen = fread(inbuf+1, sizeof(char), fp->readthismuch - 1, inpfile);
-                /* fixme: pass userpointer along */
+                inlen = fread(inbuf+1, sizeof(char), fp->readthismuch - 1, infile);
                 outlen = fp->funcptr(outbuf, inbuf, inlen + 1, uptr);
                 if(outlen > 0)
                 {
-                    fwrite(outbuf, sizeof(char), outlen, outpfile);
+                    fwrite(outbuf, sizeof(char), outlen, outfile);
                 }
                 
             }
             else
             {
-                fputc(ch, outpfile);
+                fputc(ch, outfile);
             }
         }
         else
         {
-            inlen = fread(inbuf, sizeof(char), fp->readthismuch, inpfile);
+            inlen = fread(inbuf, sizeof(char), fp->readthismuch, infile);
             if((inlen == fp->readthismuch) || (inlen > 0))
             {
-                /* fixme: pass userpointer along */
                 outlen = fp->funcptr(outbuf, inbuf, inlen, uptr);
                 if(outlen > 0)
                 {
-                    fwrite(outbuf, sizeof(char), outlen, outpfile);
+                    fwrite(outbuf, sizeof(char), outlen, outfile);
                 }
             }
             else
@@ -141,13 +143,20 @@ void loopdo(const char* term, FILE* inpfile, FILE* outpfile, const struct btdata
                 return;
             }
         }
+        if(inlen > oldlen)
+        {
+            memset(inbuf, 0, fp->buffersize + kMaxInSize);
+        }
+        oldlen = inlen;
     }
+    free(outbuf);
+    free(inbuf);
 }
 
 static void printhlp(int argc, char** argv)
 {
     size_t i;
-    struct btdata_t fp;
+    struct verbinfo_t fp;
     (void)argc;
     fprintf(stderr, "error: usage: %s <term>\n", argv[0]);
     fprintf(stderr, "available commands:\n");
@@ -166,22 +175,23 @@ int main(int argc, char* argv[])
 {
     const char* term;
     void* uptr;
-    FILE* inpfile;
-    FILE* outpfile;
-    const struct btdata_t* fp;
+    FILE* infile;
+    FILE* outfile;
+    const struct verbinfo_t* fp;
     /* disable I/O buffering */
+    setvbuf(stdin, NULL, _IONBF, 0);
     setvbuf(stdout, NULL, _IONBF, 0);
     if(argc > 1)
     {
-        inpfile = stdin;
-        outpfile = stdout;
+        infile = stdin;
+        outfile = stdout;
         term = argv[1];
-        if((fp = btfuncget(term)) != NULL)
+        if((fp = getverb(term)) != NULL)
         {
             if((argc - ARGCOFS) >= fp->comargs)
             {
-                uptr = fp->prefunc((argc > 2) ? (((const char**)argv) + 2) : NULL);
-                loopdo(term, inpfile, outpfile, fp, uptr);
+                uptr = fp->prefunc((argc > 2) ? (((const char**)argv) + 2) : NULL, infile, outfile);
+                loopdo(term, infile, outfile, fp, uptr);
                 fp->postfunc(uptr);
             }
             else

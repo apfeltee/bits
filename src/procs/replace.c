@@ -46,13 +46,15 @@ static int str2i(const char* instr)
     return 0;
 }
 
-void* btf_replace_pre(const char** comargs)
+void* btf_replace_pre(const char** comargs, FILE* infh, FILE* outfh)
 {
     int chfind;
     int chreplace;
     const char* sifind;
     const char* sireplace;
     struct repinfo* rep;
+    (void)infh;
+    (void)outfh;
     sifind = comargs[0];
     sireplace = comargs[1];
     chfind = str2i(sifind);

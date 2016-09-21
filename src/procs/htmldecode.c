@@ -2,9 +2,11 @@
 #include "private.h"
 #include "entities_generated.h"
 
-void* btf_htmldec_pre(const char** comargs)
+void* btf_htmldec_pre(const char** comargs, FILE* infh, FILE* outfh)
 {
     (void)comargs;
+    (void)infh;
+    (void)outfh;
     return NULL;
 }
 
@@ -18,10 +20,12 @@ size_t btf_htmldec_main(char* buf, const char* inp, size_t len, void* ptr)
     size_t it;
     (void)len;
     (void)ptr;
+    /* &#<n>; are just character lits */
     if(inp[0] == '#')
     {
         for(it=1; it<len; it++)
         {
+            /* afaik it has to be numeric all the way? */
             if(isdigit((int)inp[it]) == 0)
             {
                 goto failure;
@@ -38,8 +42,11 @@ size_t btf_htmldec_main(char* buf, const char* inp, size_t len, void* ptr)
             return html_entities[it].length;
         }
     }
+    /*
+    * if everything failed, we'll end up here.
+    * replace the entitiy with a question mark, in good ol' unicode fashion
+    */
 failure:
-    /* otherwise replace with a question mark, in good ol' unicode fashion */
     buf[0] = '?';
     return 1;
 }

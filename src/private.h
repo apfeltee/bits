@@ -4,11 +4,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <inttypes.h>
 #include <ctype.h>
 #include <string.h>
 
 #define PROTO(procname) \
-    extern void* btf_##procname##_pre(const char** comargs); \
+    extern void* btf_##procname##_pre(const char** comargs, FILE* infh, FILE* outfh); \
     extern void btf_##procname##_post(void* ptr); \
     extern size_t btf_##procname##_main(char* buf, const char* inp, size_t len, void* ptr);
 
@@ -28,6 +29,8 @@
         description \
     }
 
+#define newstruct(typ) (typ*)malloc(sizeof(typ))
+
 /* these are only allocated once per run, rather than allocating over and over again each loop */
 enum
 {
@@ -38,7 +41,7 @@ enum
     kMaxOutSize = 512,
 };
 
-typedef size_t(*btfunc_main_t)(
+typedef size_t(*procfn_main_t)(
     /*
     * output buffer. output should be appended to this buffer
     */
@@ -60,23 +63,30 @@ typedef size_t(*btfunc_main_t)(
     void*
 );
 
-typedef void* (*btfunc_pre_t)(
+typedef void* (*procfn_pre_t)(
     /*
     * options passed through the command line. will be NULL if spec does not specify
     * if the verb needs any.
     */
-    const char**
+    const char**,
+
+    /* input file handle */
+    FILE*,
+
+    /* output file handle */
+    FILE*
 );
 
-typedef void (*btfunc_post_t)(
+typedef void (*procfn_post_t)(
+    /* user data */
     void*
 );
 
 /*
-* as it stands, btdata_t is only going to get larger and more complicated from here.
+* as it stands, this struct is only going to get larger and more complicated from here.
 * sorry, though.
 */
-struct btdata_t
+struct verbinfo_t
 {
     /*
     * name of the verb
@@ -86,9 +96,9 @@ struct btdata_t
     /*
     * destination functions
     */
-    btfunc_pre_t prefunc;
-    btfunc_post_t postfunc;
-    btfunc_main_t funcptr;
+    procfn_pre_t prefunc;
+    procfn_post_t postfunc;
+    procfn_main_t funcptr;
 
     /*
     * read at least this much data at once.
@@ -123,7 +133,7 @@ struct btdata_t
     /* size for the i/o buffer */
     size_t buffersize;
 
-    /* can be null */
+    /* todo: explain this one */
     const char* validchars;
 
     /*
@@ -132,7 +142,7 @@ struct btdata_t
     const char* description;
 };
 
-static const char printable_characters[] =
+static const char printable_chartab[] =
     "0123456789"
     "abcdefghijklmnopqrstuvwxyz"
     "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -140,14 +150,20 @@ static const char printable_characters[] =
     " \t\n\r\x0b\x0c"
 ;
 
-static const char html_valid_chars[] =
+static const char base64_chartab[] =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    "abcdefghijklmnopqrstuvwxyz"
+    "0123456789+/"
+;
+
+static const char htmtentity_chartab[] =
     "#"
     "0123456789"
     "abcdefghijklmnopqrstuvwxyz"
     "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 ;
 
-static const char hex_table[] =
+static const char hex_chartab[] =
 {
     '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
     'a', 'b', 'c', 'd', 'e', 'f'
@@ -160,13 +176,15 @@ PROTO(trimnull);
 PROTO(urlencode);
 PROTO(urldecode);
 PROTO(rot13);
+PROTO(base64enc);
 PROTO(htmlenc);
 PROTO(htmldec);
 PROTO(hexencode);
 PROTO(hexdecode);
 PROTO(replace);
+PROTO(count);
 
-static const struct btdata_t funcs[] =
+static const struct verbinfo_t funcs[] =
 {
     MKENTRY(tolower, 
         /*readthismuch*/ 1,
@@ -228,6 +246,16 @@ static const struct btdata_t funcs[] =
         /*validchars*/ NULL,
        "performs ROT13 on input data"),
 
+    MKENTRY(base64enc, 
+        /*readthismuch*/ 3,
+        /*ifbeginswith*/ 0,
+        /*ifendswith*/ 0,
+        /*delimiter*/ 0,
+        /*comargs*/ 0,
+        /*buffersize*/ 50,
+        /*validchars*/ NULL,
+       "base64-encode bytes"),
+
     MKENTRY(htmlenc, 
         /*readthismuch*/ 1,
         /*ifbeginswith*/ 0,
@@ -245,7 +273,7 @@ static const struct btdata_t funcs[] =
         /*delimiter*/ 0,
         /*comargs*/ 0,
         /*buffersize*/ 50,
-        /*validchars*/ html_valid_chars,
+        /*validchars*/ htmtentity_chartab,
        "decode html entities"),
 
     MKENTRY(hexencode, 
@@ -277,6 +305,16 @@ static const struct btdata_t funcs[] =
         /*buffersize*/ 50,
         /*validchars*/ NULL,
        "replace one byte with another byte. arguments expected to be numeric or characters"),
+
+    MKENTRY(count, 
+        /*readthismuch*/ 1024 * 8,
+        /*ifbeginswith*/ 0,
+        /*ifendswith*/ 0,
+        /*delimiter*/ 0,
+        /*comargs*/ 0,
+        /*buffersize*/ 50,
+        /*validchars*/ NULL,
+       "count bytes read"),
 
     {NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0, 0, NULL, NULL},
 };

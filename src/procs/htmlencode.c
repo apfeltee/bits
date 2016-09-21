@@ -4,6 +4,7 @@
 
 static bool istextchar(int ch)
 {
+    /* not really sure if this is actually necessary */
     if(strchr("<>&+`;\"'", ch) || (isprint(ch) == 0))
     {
         return false;
@@ -11,9 +12,11 @@ static bool istextchar(int ch)
     return true;
 }
 
-void* btf_htmlenc_pre(const char** comargs)
+void* btf_htmlenc_pre(const char** comargs, FILE* infh, FILE* outfh)
 {
     (void)comargs;
+    (void)infh;
+    (void)outfh;
     return NULL;
 }
 
@@ -43,7 +46,6 @@ size_t btf_htmlenc_main(char* buf, const char* inp, size_t len, void* ptr)
             {
                 if(ch == html_entities[it].value[0])
                 {
-                    //buf[0] = html_entities[it].value[0];
                     memcpy(buf, html_entities[it].entity, html_entities[it].entlength);
                     return html_entities[it].entlength;
                 }

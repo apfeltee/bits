@@ -11,9 +11,11 @@ static int ishex(int x)
     );
 }
 
-void* btf_urldecode_pre(const char** comargs)
+void* btf_urldecode_pre(const char** comargs, FILE* infh, FILE* outfh)
 {
     (void)comargs;
+    (void)infh;
+    (void)outfh;
     return NULL;
 }
 

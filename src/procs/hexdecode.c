@@ -18,9 +18,11 @@ static unsigned char chrnib(char c)
     return 255;
 }
 
-void* btf_hexdecode_pre(const char** comargs)
+void* btf_hexdecode_pre(const char** comargs, FILE* infh, FILE* outfh)
 {
     (void)comargs;
+    (void)infh;
+    (void)outfh;
     return NULL;
 }
 

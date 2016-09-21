@@ -13,9 +13,11 @@ static char rot13_char(int c)
 }
 
 
-void* btf_rot13_pre(const char** comargs)
+void* btf_rot13_pre(const char** comargs, FILE* infh, FILE* outfh)
 {
     (void)comargs;
+    (void)infh;
+    (void)outfh;
     return NULL;
 }
 

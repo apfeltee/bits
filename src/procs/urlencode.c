@@ -1,9 +1,11 @@
 
 #include "private.h"
 
-void* btf_urlencode_pre(const char** comargs)
+void* btf_urlencode_pre(const char** comargs, FILE* infh, FILE* outfh)
 {
     (void)comargs;
+    (void)infh;
+    (void)outfh;
     return NULL;
 }
 

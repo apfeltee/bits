@@ -1,9 +1,11 @@
 
 #include "private.h"
 
-void* btf_tolower_pre(const char** comargs)
+void* btf_tolower_pre(const char** comargs, FILE* infh, FILE* outfh)
 {
     (void)comargs;
+    (void)infh;
+    (void)outfh;
     return NULL;
 }
 
