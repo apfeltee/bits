@@ -6,7 +6,7 @@ struct base64enc_vars
     unsigned long width;
 };
 
-void* btf_base64enc_pre(const char** comargs, FILE* infh, FILE* outfh)
+static void* fnpre(const char** comargs, FILE* infh, FILE* outfh)
 {
     (void)comargs;
     (void)infh;
@@ -17,12 +17,12 @@ void* btf_base64enc_pre(const char** comargs, FILE* infh, FILE* outfh)
     return bv;
 }
 
-void btf_base64enc_post(void* ptr)
+static void fnpost(void* ptr)
 {
     free((struct base64enc_vars*)ptr);
 }
 
-size_t btf_base64enc_main(char* buf, const char* inp, size_t len, void* ptr)
+static size_t fnmain(char* buf, const char* inp, size_t len, void* ptr)
 {
     unsigned long ofs;
     const unsigned char* uinp;
@@ -42,7 +42,20 @@ size_t btf_base64enc_main(char* buf, const char* inp, size_t len, void* ptr)
         return 5;
     }
     return 4;
-
 };
 
+void btf_base64enc_info(struct verbinfo_t* inf)
+{
+    inf->prefunc = fnpre;
+    inf->postfunc = fnpost;
+    inf->mainfunc = fnmain;
+    inf->readthismuch = 3;
+    inf->ifbeginswith = 0;
+    inf->ifendswith = 0;
+    inf->delimiter = 0;
+    inf->comargs = 0;
+    inf->buffersize = 50;
+    inf->validchars = NULL;
+    inf->description = "base64-encode bytes";
+};
 

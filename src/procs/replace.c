@@ -46,7 +46,7 @@ static int str2i(const char* instr)
     return 0;
 }
 
-void* btf_replace_pre(const char** comargs, FILE* infh, FILE* outfh)
+static void* fnpre(const char** comargs, FILE* infh, FILE* outfh)
 {
     int chfind;
     int chreplace;
@@ -77,7 +77,7 @@ void* btf_replace_pre(const char** comargs, FILE* infh, FILE* outfh)
     return NULL;
 }
 
-void btf_replace_post(void* ptr)
+static void fnpost(void* ptr)
 {
     if(ptr != NULL)
     {
@@ -85,7 +85,7 @@ void btf_replace_post(void* ptr)
     }
 }
 
-size_t btf_replace_main(char* buf, const char* inp, size_t len, void* ptr)
+static size_t fnmain(char* buf, const char* inp, size_t len, void* ptr)
 {
     int outval;
     struct repinfo* rep;
@@ -106,3 +106,17 @@ size_t btf_replace_main(char* buf, const char* inp, size_t len, void* ptr)
     return 1;
 }
 
+void btf_replace_info(struct verbinfo_t* inf)
+{
+    inf->prefunc = fnpre;
+    inf->postfunc = fnpost;
+    inf->mainfunc = fnmain;
+    inf->readthismuch = 1;
+    inf->ifbeginswith = 0;
+    inf->ifendswith = 0;
+    inf->delimiter = 0;
+    inf->comargs = 2;
+    inf->buffersize = 50;
+    inf->validchars = NULL;
+    inf->description = "replace one byte with another byte. arguments expected to be numeric or characters";
+};

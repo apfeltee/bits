@@ -1,7 +1,7 @@
 
 #include "private.h"
 
-void* btf_urlencode_pre(const char** comargs, FILE* infh, FILE* outfh)
+static void* fnpre(const char** comargs, FILE* infh, FILE* outfh)
 {
     (void)comargs;
     (void)infh;
@@ -9,13 +9,13 @@ void* btf_urlencode_pre(const char** comargs, FILE* infh, FILE* outfh)
     return NULL;
 }
 
-void btf_urlencode_post(void* ptr)
+static void fnpost(void* ptr)
 {
     (void)ptr;
 }
 
 /* this is a rather greedy algorithm, possibly not RFC compliant */
-size_t btf_urlencode_main(char* buf, const char* inp, size_t len, void* ptr)
+static size_t fnmain(char* buf, const char* inp, size_t len, void* ptr)
 {
     int ch;
     size_t cnt;
@@ -31,5 +31,20 @@ size_t btf_urlencode_main(char* buf, const char* inp, size_t len, void* ptr)
     buf[0] = '%';
     cnt = snprintf(buf + 1, kMaxOutSize - 1, "%02X", (int)((unsigned char)ch));
     return cnt + 1;
+}
+
+void btf_urlencode_info(struct verbinfo_t* inf)
+{
+    inf->prefunc = fnpre;
+    inf->postfunc = fnpost;
+    inf->mainfunc = fnmain;
+    inf->readthismuch = 1;
+    inf->ifbeginswith = 0;
+    inf->ifendswith = 0;
+    inf->delimiter = 0;
+    inf->comargs = 0;
+    inf->buffersize = 50;
+    inf->validchars = NULL;
+    inf->description = "encodes data into URL safe characters (greedy)";
 }
 

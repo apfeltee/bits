@@ -2,7 +2,7 @@
 #include "private.h"
 #include "entities_generated.h"
 
-void* btf_htmldec_pre(const char** comargs, FILE* infh, FILE* outfh)
+static void* fnpre(const char** comargs, FILE* infh, FILE* outfh)
 {
     (void)comargs;
     (void)infh;
@@ -10,12 +10,12 @@ void* btf_htmldec_pre(const char** comargs, FILE* infh, FILE* outfh)
     return NULL;
 }
 
-void btf_htmldec_post(void* ptr)
+static void fnpost(void* ptr)
 {
     (void)ptr;
 }
 
-size_t btf_htmldec_main(char* buf, const char* inp, size_t len, void* ptr)
+static size_t fnmain(char* buf, const char* inp, size_t len, void* ptr)
 {
     size_t it;
     (void)len;
@@ -51,4 +51,18 @@ failure:
     return 1;
 }
 
+void btf_htmldec_info(struct verbinfo_t* inf)
+{
+    inf->prefunc = fnpre;
+    inf->postfunc = fnpost;
+    inf->mainfunc = fnmain;
+    inf->readthismuch = 1;
+    inf->ifbeginswith = '&';
+    inf->ifendswith = '&';
+    inf->delimiter = 0;
+    inf->comargs = 0;
+    inf->buffersize = 50;
+    inf->validchars = htmtentity_chartab;
+    inf->description = "decode html entities";
+};
 

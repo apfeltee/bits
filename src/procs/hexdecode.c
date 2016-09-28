@@ -18,7 +18,7 @@ static unsigned char chrnib(char c)
     return 255;
 }
 
-void* btf_hexdecode_pre(const char** comargs, FILE* infh, FILE* outfh)
+static void* fnpre(const char** comargs, FILE* infh, FILE* outfh)
 {
     (void)comargs;
     (void)infh;
@@ -26,16 +26,31 @@ void* btf_hexdecode_pre(const char** comargs, FILE* infh, FILE* outfh)
     return NULL;
 }
 
-void btf_hexdecode_post(void* ptr)
+static void fnpost(void* ptr)
 {
     (void)ptr;
 }
 
-size_t btf_hexdecode_main(char* buf, const char* inp, size_t len, void* ptr)
+static size_t fnmain(char* buf, const char* inp, size_t len, void* ptr)
 {
     (void)len;
     (void)ptr;
     buf[0] = (chrnib(*inp) << 4) | chrnib(*(inp + 1));
     return 1;
 }
+
+void btf_hexdecode_info(struct verbinfo_t* inf)
+{
+    inf->prefunc = fnpre;
+    inf->postfunc = fnpost;
+    inf->mainfunc = fnmain;
+    inf->readthismuch = 2;
+    inf->ifbeginswith = 0;
+    inf->ifendswith = 0;
+    inf->delimiter = 0;
+    inf->comargs = 0;
+    inf->buffersize = 50;
+    inf->validchars = NULL;
+    inf->description = "decodes hex-encoded input data (input being 2 character hex data)";
+};
 

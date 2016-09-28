@@ -14,8 +14,6 @@ struct = %q<
   }
 >
 
-# JSON.load doesn't seem to handle utf-8 properly for some reason
-# so we need to eval() the stuff
 entitydata = JSON.load(File.read("entities.json"))
 printf("static const %s html_entities[] = {\n", struct.strip)
 entitydata.each do |k, v|

@@ -7,7 +7,7 @@ struct countbytes_t
     FILE* outfile;
 };
 
-void* btf_count_pre(const char** comargs, FILE* infh, FILE* outfh)
+static void* fnpre(const char** comargs, FILE* infh, FILE* outfh)
 {
     struct countbytes_t* cnt;
     (void)comargs;
@@ -19,7 +19,7 @@ void* btf_count_pre(const char** comargs, FILE* infh, FILE* outfh)
     return cnt;
 }
 
-void btf_count_post(void* ptr)
+static void fnpost(void* ptr)
 {
     struct countbytes_t* cnt;
     cnt = (struct countbytes_t*)ptr;
@@ -27,7 +27,7 @@ void btf_count_post(void* ptr)
     free(cnt);
 }
 
-size_t btf_count_main(char* buf, const char* inp, size_t len, void* ptr)
+size_t fnmain(char* buf, const char* inp, size_t len, void* ptr)
 {
     struct countbytes_t* cnt;
     (void)buf;
@@ -36,4 +36,19 @@ size_t btf_count_main(char* buf, const char* inp, size_t len, void* ptr)
     cnt->counter += len;
     return 0;
 }
+
+void btf_count_info(struct verbinfo_t* inf)
+{
+    inf->prefunc = fnpre;
+    inf->postfunc = fnpost;
+    inf->mainfunc = fnmain;
+    inf->readthismuch = 1024 * 8;
+    inf->ifbeginswith = 0;
+    inf->ifendswith = 0;
+    inf->delimiter = 0;
+    inf->comargs = 0;
+    inf->buffersize = 50;
+    inf->validchars = NULL;
+    inf->description = "count bytes read";
+};
 

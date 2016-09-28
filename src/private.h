@@ -9,25 +9,10 @@
 #include <string.h>
 
 #define PROTO(procname) \
-    extern void* btf_##procname##_pre(const char** comargs, FILE* infh, FILE* outfh); \
-    extern void btf_##procname##_post(void* ptr); \
-    extern size_t btf_##procname##_main(char* buf, const char* inp, size_t len, void* ptr);
+    extern void btf_##procname##_info(struct verbinfo_t* inf); \
 
-#define MKENTRY(fname, readthismuch, ifbeginswith, ifendswith, delimiter, comargs, buffersize, validchars, description) \
-    { \
-        #fname, \
-        btf_##fname##_pre, \
-        btf_##fname##_post, \
-        btf_##fname##_main, \
-        readthismuch, \
-        ifbeginswith, \
-        ifendswith, \
-        delimiter, \
-        comargs, \
-        buffersize, \
-        validchars, \
-        description \
-    }
+#define MKENTRY(fname) \
+    {#fname, btf_##fname##_info}
 
 #define newstruct(typ) (typ*)malloc(sizeof(typ))
 
@@ -40,6 +25,8 @@ enum
     /* maximum size of the output buffer */
     kMaxOutSize = 512,
 };
+
+struct verbinfo_t;
 
 typedef size_t(*procfn_main_t)(
     /*
@@ -82,6 +69,16 @@ typedef void (*procfn_post_t)(
     void*
 );
 
+/* the function that gets called to retrieve information about the verb */
+typedef void (*infofunc_t)(struct verbinfo_t*);
+
+
+struct verbpair_t
+{
+    const char* verbname;
+    infofunc_t infofunc;
+};
+
 /*
 * as it stands, this struct is only going to get larger and more complicated from here.
 * sorry, though.
@@ -96,9 +93,9 @@ struct verbinfo_t
     /*
     * destination functions
     */
-    procfn_pre_t prefunc;
+    procfn_pre_t  prefunc;
     procfn_post_t postfunc;
-    procfn_main_t funcptr;
+    procfn_main_t mainfunc;
 
     /*
     * read at least this much data at once.
@@ -182,140 +179,26 @@ PROTO(htmldec);
 PROTO(hexencode);
 PROTO(hexdecode);
 PROTO(replace);
+PROTO(cstring);
 PROTO(count);
 
-static const struct verbinfo_t funcs[] =
+
+static const struct verbpair_t funcs[] =
 {
-    MKENTRY(tolower, 
-        /*readthismuch*/ 1,
-        /*ifbeginswith*/ 0,
-        /*ifendswith*/ 0,
-        /*delimiter*/ 0,
-        /*comargs*/ 0,
-        /*buffersize*/ 10,
-        /*validchars*/ NULL,
-       "transform bits to lowercase"),
-
-    MKENTRY(toupper, 
-        /*readthismuch*/ 1,
-        /*ifbeginswith*/ 0,
-        /*ifendswith*/ 0,
-        /*delimiter*/ 0,
-        /*comargs*/ 0,
-        /*buffersize*/ 10,
-        /*validchars*/ NULL,
-       "transform bits to uppercase"),
-
-    MKENTRY(trimnull, 
-        /*readthismuch*/ 1,
-        /*ifbeginswith*/ 0,
-        /*ifendswith*/ 0,
-        /*delimiter*/ 0,
-        /*comargs*/ 0,
-        /*buffersize*/ 10,
-        /*validchars*/ NULL,
-       "trims nullbytes from input"),
-
-    MKENTRY(urlencode, 
-        /*readthismuch*/ 1,
-        /*ifbeginswith*/ 0,
-        /*ifendswith*/ 0,
-        /*delimiter*/ 0,
-        /*comargs*/ 0,
-        /*buffersize*/ 50,
-        /*validchars*/ NULL,
-       "encodes data into URL safe characters (greedy)"),
-
-    MKENTRY(urldecode, 
-        /*readthismuch*/ 3,
-        /*ifbeginswith*/ '%',
-        /*ifendswith*/ 0,
-        /*delimiter*/ 0,
-        /*comargs*/ 0,
-        /*buffersize*/ 50,
-        /*validchars*/ NULL,
-       "decodes URL safe characters back into data"),
-
-    MKENTRY(rot13, 
-        /*readthismuch*/ 1,
-        /*ifbeginswith*/ 0,
-        /*ifendswith*/ 0,
-        /*delimiter*/ 0,
-        /*comargs*/ 0,
-        /*buffersize*/ 50,
-        /*validchars*/ NULL,
-       "performs ROT13 on input data"),
-
-    MKENTRY(base64enc, 
-        /*readthismuch*/ 3,
-        /*ifbeginswith*/ 0,
-        /*ifendswith*/ 0,
-        /*delimiter*/ 0,
-        /*comargs*/ 0,
-        /*buffersize*/ 50,
-        /*validchars*/ NULL,
-       "base64-encode bytes"),
-
-    MKENTRY(htmlenc, 
-        /*readthismuch*/ 1,
-        /*ifbeginswith*/ 0,
-        /*ifendswith*/ 0,
-        /*delimiter*/ 0,
-        /*comargs*/ 0,
-        /*buffersize*/ 50,
-        /*validchars*/ NULL,
-       "encode entities for html (greedy)"),
-
-    MKENTRY(htmldec, 
-        /*readthismuch*/ 1,
-        /*ifbeginswith*/ '&',
-        /*ifendswith*/ ';',
-        /*delimiter*/ 0,
-        /*comargs*/ 0,
-        /*buffersize*/ 50,
-        /*validchars*/ htmtentity_chartab,
-       "decode html entities"),
-
-    MKENTRY(hexencode, 
-        /*readthismuch*/ 1,
-        /*ifbeginswith*/ 0,
-        /*ifendswith*/ 0,
-        /*delimiter*/ 0,
-        /*comargs*/ 0,
-        /*buffersize*/ 50,
-        /*validchars*/ NULL,
-       "hex-encodes input data"),
-
-    MKENTRY(hexdecode, 
-        /*readthismuch*/ 2,
-        /*ifbeginswith*/ 0,
-        /*ifendswith*/ 0,
-        /*delimiter*/ 0,
-        /*comargs*/ 0,
-        /*buffersize*/ 50,
-        /*validchars*/ NULL,
-       "decodes hex-encoded input data (input being 2 character hex data)"),
-
-    MKENTRY(replace, 
-        /*readthismuch*/ 1,
-        /*ifbeginswith*/ 0,
-        /*ifendswith*/ 0,
-        /*delimiter*/ 0,
-        /*comargs*/ 2,
-        /*buffersize*/ 50,
-        /*validchars*/ NULL,
-       "replace one byte with another byte. arguments expected to be numeric or characters"),
-
-    MKENTRY(count, 
-        /*readthismuch*/ 1024 * 8,
-        /*ifbeginswith*/ 0,
-        /*ifendswith*/ 0,
-        /*delimiter*/ 0,
-        /*comargs*/ 0,
-        /*buffersize*/ 50,
-        /*validchars*/ NULL,
-       "count bytes read"),
-
-    {NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0, 0, NULL, NULL},
+    MKENTRY(tolower),
+    MKENTRY(toupper),
+    MKENTRY(trimnull),
+    MKENTRY(urlencode),
+    MKENTRY(urldecode),
+    MKENTRY(rot13),
+    MKENTRY(base64enc),
+    MKENTRY(htmlenc),
+    MKENTRY(htmldec),
+    MKENTRY(hexencode),
+    MKENTRY(hexdecode),
+    MKENTRY(replace),
+    MKENTRY(cstring),
+    MKENTRY(count),
+    {NULL, NULL},
 };
 

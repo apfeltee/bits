@@ -1,7 +1,7 @@
 
 #include "private.h"
 
-void* btf_tolower_pre(const char** comargs, FILE* infh, FILE* outfh)
+static void* fnpre(const char** comargs, FILE* infh, FILE* outfh)
 {
     (void)comargs;
     (void)infh;
@@ -9,12 +9,12 @@ void* btf_tolower_pre(const char** comargs, FILE* infh, FILE* outfh)
     return NULL;
 }
 
-void btf_tolower_post(void* ptr)
+static void fnpost(void* ptr)
 {
     (void)ptr;
 }
 
-size_t btf_tolower_main(char* buf, const char* inp, size_t len, void* ptr)
+static size_t fnmain(char* buf, const char* inp, size_t len, void* ptr)
 {
     (void)len;
     (void)ptr;
@@ -22,4 +22,17 @@ size_t btf_tolower_main(char* buf, const char* inp, size_t len, void* ptr)
     return 1;
 };
 
-
+void btf_tolower_info(struct verbinfo_t* inf)
+{
+    inf->prefunc = fnpre;
+    inf->postfunc = fnpost;
+    inf->mainfunc = fnmain;
+    inf->readthismuch = 1;
+    inf->ifbeginswith = 0;
+    inf->ifendswith = 0;
+    inf->delimiter = 0;
+    inf->comargs = 0;
+    inf->buffersize = 10;
+    inf->validchars = NULL;
+    inf->description = "transform bits to lowercase";
+};

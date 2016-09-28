@@ -11,7 +11,7 @@ static int ishex(int x)
     );
 }
 
-void* btf_urldecode_pre(const char** comargs, FILE* infh, FILE* outfh)
+static void* fnpre(const char** comargs, FILE* infh, FILE* outfh)
 {
     (void)comargs;
     (void)infh;
@@ -19,13 +19,13 @@ void* btf_urldecode_pre(const char** comargs, FILE* infh, FILE* outfh)
     return NULL;
 }
 
-void btf_urldecode_post(void* ptr)
+static void fnpost(void* ptr)
 {
     (void)ptr;
 }
 
 /* there is a slight possibility that there might be a bug here... */
-size_t btf_urldecode_main(char* buf, const char* inp, size_t len, void* ptr)
+static size_t fnmain(char* buf, const char* inp, size_t len, void* ptr)
 {
     unsigned int dest;
     (void)ptr;
@@ -45,4 +45,18 @@ size_t btf_urldecode_main(char* buf, const char* inp, size_t len, void* ptr)
     return len;
 }
 
+void btf_urldecode_info(struct verbinfo_t* inf)
+{
+    inf->prefunc = fnpre;
+    inf->postfunc = fnpost;
+    inf->mainfunc = fnmain;
+    inf->readthismuch = 3;
+    inf->ifbeginswith = '%';
+    inf->ifendswith = '%';
+    inf->delimiter = 0;
+    inf->comargs = 0;
+    inf->buffersize = 50;
+    inf->validchars = NULL;
+    inf->description = "decodes URL safe characters back into data";
+};
 
