@@ -18,7 +18,6 @@ static void fnpost(void* ptr)
 static size_t fnmain(char* buf, const char* inp, size_t len, void* ptr)
 {
     size_t it;
-    (void)len;
     (void)ptr;
     /* &#<n>; are just character lits */
     if(inp[0] == '#')
@@ -51,14 +50,14 @@ failure:
     return 1;
 }
 
-void btf_htmldec_info(struct verbinfo_t* inf)
+void btf_htmldec_info(struct bits_commandinfo_t* inf)
 {
     inf->prefunc = fnpre;
     inf->postfunc = fnpost;
     inf->mainfunc = fnmain;
     inf->readthismuch = 1;
     inf->ifbeginswith = '&';
-    inf->ifendswith = '&';
+    inf->ifendswith = ';';
     inf->delimiter = 0;
     inf->comargs = 0;
     inf->buffersize = 50;

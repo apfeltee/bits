@@ -34,7 +34,7 @@ static size_t btf_rot13_main(char* buf, const char* inp, size_t len, void* ptr)
     return 1;
 }
 
-void btf_rot13_info(struct verbinfo_t* inf)
+void btf_rot13_info(struct bits_commandinfo_t* inf)
 {
     inf->prefunc = btf_rot13_pre;
     inf->postfunc = btf_rot13_post;

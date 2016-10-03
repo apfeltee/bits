@@ -7,6 +7,20 @@ enum
     ARGCOFS = 2
 };
 
+/*
+* freaduntil behaves similar to fread, except:
+* it will read from $stream into $buffer until $until was found or $bufsize was reached.
+* think of it as a "generic" version of fgets().
+*
+* arguments:
+*    $stream  - file stream to read from
+*    $buffer  - allocated destination to write to
+*    $bufsize - maximum size of $buffer (i.e., the size $buffer was allocated to)
+*    $until   - read until this character is encountered; the character is *included* in $buffer!
+*    $valids  - if not null, this string array represents the characters that $until may represent
+*    $found   - destination variable to be set to true if freaduntil() actually encountered $until, 
+*               otherwise set to false
+*/
 static size_t freaduntil(FILE* stream, char* buffer, size_t bufsize, char until, const char* valids, bool* found)
 {
     size_t rd;
@@ -58,7 +72,7 @@ static infofunc_t getverb(const char* term)
     return NULL;
 };
 
-static void loopdo(const char* term, FILE* infile, FILE* outfile, struct verbinfo_t* fp, void* uptr)
+static void loopdo(const char* term, FILE* infile, FILE* outfile, struct bits_commandinfo_t* fp, void* uptr)
 {
     size_t outlen;
     size_t inlen;
@@ -145,7 +159,7 @@ static void loopdo(const char* term, FILE* infile, FILE* outfile, struct verbinf
         }
         if(inlen > oldlen)
         {
-            memset(inbuf, 0, fp->buffersize + kMaxInSize);
+            memset(inbuf, 0, ((fp->readthismuch > kMaxInSize) ? (fp->readthismuch + 10) : kMaxInSize));
         }
         oldlen = inlen;
     }
@@ -153,18 +167,34 @@ static void loopdo(const char* term, FILE* infile, FILE* outfile, struct verbinf
     free(inbuf);
 }
 
+static void resetcomminf(struct bits_commandinfo_t* inf)
+{
+    inf->prefunc  = NULL;
+    inf->postfunc = NULL;
+    inf->mainfunc = NULL;
+    inf->compfunc = NULL;
+    inf->readthismuch = 0;
+    inf->ifbeginswith = 0;
+    inf->ifendswith = 0;
+    inf->delimiter = 0;
+    inf->comargs = 0;
+    inf->buffersize = 0;
+    inf->validchars = NULL;
+    inf->description = NULL;
+}
+
 static void printhlp(int argc, char** argv)
 {
     size_t i;
-    struct verbpair_t fp;
-    struct verbinfo_t inf;
+    struct bits_commpair_t fp;
+    struct bits_commandinfo_t inf;
     (void)argc;
     fprintf(stderr, "error: usage: %s <term>\n", argv[0]);
     fprintf(stderr, "available commands:\n");
     for(i=0; (fp = funcs[i]).verbname != NULL; i++)
     {
         fp.infofunc(&inf);
-        fprintf(stderr, " %-10s - %s\n", fp.verbname, inf.description);
+        fprintf(stderr, " -%-10s - %s\n", fp.verbname, inf.description);
     }
     fprintf(stderr, "\n");
     fprintf(stderr,
@@ -173,6 +203,10 @@ static void printhlp(int argc, char** argv)
     );
 }
 
+/*
+* todo: rewrite of command line parsing necessary!!
+* currently it's nothing but a hack, and that's bad.
+*/
 int main(int argc, char* argv[])
 {
     const char* term;
@@ -180,38 +214,47 @@ int main(int argc, char* argv[])
     FILE* infile;
     FILE* outfile;
     infofunc_t infofn;
-    struct verbinfo_t fp;
+    struct bits_commandinfo_t fp;
     /* disable I/O buffering */
     setvbuf(stdin, NULL, _IONBF, 0);
     setvbuf(stdout, NULL, _IONBF, 0);
     if(argc > 1)
     {
-        infile = stdin;
-        outfile = stdout;
-        term = argv[1];
-        if((infofn = getverb(term)) != NULL)
+        if(argv[1][0] == '-')
         {
-            infofn(&fp);
-            if((argc - ARGCOFS) >= fp.comargs)
+            infile = stdin;
+            outfile = stdout;
+            term = ((argv[1]) + 1);
+            if((infofn = getverb(term)) != NULL)
             {
-                uptr = fp.prefunc((argc > 2) ? (((const char**)argv) + 2) : NULL, infile, outfile);
-                loopdo(term, infile, outfile, &fp, uptr);
-                fp.postfunc(uptr);
+                resetcomminf(&fp);
+                infofn(&fp);
+                if((argc - ARGCOFS) >= fp.comargs)
+                {
+                    uptr = fp.prefunc((argc > 2) ? (((const char**)argv) + 2) : NULL, infile, outfile);
+                    loopdo(term, infile, outfile, &fp, uptr);
+                    fp.postfunc(uptr);
+                }
+                else
+                {
+                    fprintf(stderr, "error: term expected %d additional options, but ", fp.comargs);
+                    if     ((argc - ARGCOFS) == 0)          fprintf(stderr, "none given");
+                    else if((argc - ARGCOFS) < fp.comargs) fprintf(stderr, "only %d given", (argc - ARGCOFS));
+                    fprintf(stderr, "\n");
+                }
             }
             else
             {
-                fprintf(stderr, "error: term expected %d additional options, but ", fp.comargs);
-                if     ((argc - ARGCOFS) == 0)          fprintf(stderr, "none given");
-                else if((argc - ARGCOFS) < fp.comargs) fprintf(stderr, "only %d given", (argc - ARGCOFS));
-                fprintf(stderr, "\n");
+                fprintf(stderr, "error: no such term: %s\n", term);
+                return 1;
             }
+            return 0;
         }
         else
         {
-            fprintf(stderr, "error: no such term: %s\n", term);
+            fprintf(stderr, "error: commands have the syntax of '-<command>', i.e., '-tolower'\n");
             return 1;
         }
-        return 0;
     }
     printhlp(argc, argv);
     return 1;

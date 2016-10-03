@@ -62,7 +62,7 @@ static  size_t fnmain(char* buf, const char* inp, size_t len, void* ptr)
     return 1;
 }
 
-void btf_htmlenc_info(struct verbinfo_t* inf)
+void btf_htmlenc_info(struct bits_commandinfo_t* inf)
 {
     inf->prefunc = fnpre;
     inf->postfunc = fnpost;

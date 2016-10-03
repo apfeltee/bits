@@ -5,9 +5,9 @@ static int ishex(int x)
 {
     return
     (
-        (x >= '0' && x <= '9') ||
-        (x >= 'a' && x <= 'f') ||
-        (x >= 'A' && x <= 'F')
+        ((x >= '0') && (x <= '9')) ||
+        ((x >= 'a') && (x <= 'f')) ||
+        ((x >= 'A') && (x <= 'F'))
     );
 }
 
@@ -45,7 +45,7 @@ static size_t fnmain(char* buf, const char* inp, size_t len, void* ptr)
     return len;
 }
 
-void btf_urldecode_info(struct verbinfo_t* inf)
+void btf_urldecode_info(struct bits_commandinfo_t* inf)
 {
     inf->prefunc = fnpre;
     inf->postfunc = fnpost;

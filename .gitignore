@@ -1,6 +1,9 @@
 bits.exe
 bits
+n.h
+./n.h
 src/entities_generated.h
+
 
 # Object files
 *.o

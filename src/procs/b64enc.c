@@ -1,6 +1,12 @@
 
 #include "private.h"
 
+static const char base64_chartab[] =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    "abcdefghijklmnopqrstuvwxyz"
+    "0123456789+/"
+;
+
 struct base64enc_vars
 {
     unsigned long width;
@@ -44,7 +50,7 @@ static size_t fnmain(char* buf, const char* inp, size_t len, void* ptr)
     return 4;
 };
 
-void btf_base64enc_info(struct verbinfo_t* inf)
+void btf_base64enc_info(struct bits_commandinfo_t* inf)
 {
     inf->prefunc = fnpre;
     inf->postfunc = fnpost;

@@ -9,7 +9,7 @@
 #include <string.h>
 
 #define PROTO(procname) \
-    extern void btf_##procname##_info(struct verbinfo_t* inf); \
+    extern void btf_##procname##_info(struct bits_commandinfo_t* inf); \
 
 #define MKENTRY(fname) \
     {#fname, btf_##fname##_info}
@@ -26,9 +26,9 @@ enum
     kMaxOutSize = 512,
 };
 
-struct verbinfo_t;
+struct bits_commandinfo_t;
 
-typedef size_t(*procfn_main_t)(
+typedef size_t(*bits_mainfunc_t)(
     /*
     * output buffer. output should be appended to this buffer
     */
@@ -50,7 +50,7 @@ typedef size_t(*procfn_main_t)(
     void*
 );
 
-typedef void* (*procfn_pre_t)(
+typedef void* (*bits_prefunc_t)(
     /*
     * options passed through the command line. will be NULL if spec does not specify
     * if the verb needs any.
@@ -64,16 +64,36 @@ typedef void* (*procfn_pre_t)(
     FILE*
 );
 
-typedef void (*procfn_post_t)(
+typedef void (*bits_postfunc_t)(
+    /* user data */
+    void*
+);
+
+typedef void (*bits_compfunc_t)(
+    /*
+    * output buffer. output should be appended to this buffer
+    */
+    char*,
+
+    /*
+    * input chunk
+    */
+    const char*,
+
+    /*
+    * size of input chunk
+    */
+    size_t,
+
     /* user data */
     void*
 );
 
 /* the function that gets called to retrieve information about the verb */
-typedef void (*infofunc_t)(struct verbinfo_t*);
+typedef void (*infofunc_t)(struct bits_commandinfo_t*);
 
 
-struct verbpair_t
+struct bits_commpair_t
 {
     const char* verbname;
     infofunc_t infofunc;
@@ -83,7 +103,7 @@ struct verbpair_t
 * as it stands, this struct is only going to get larger and more complicated from here.
 * sorry, though.
 */
-struct verbinfo_t
+struct bits_commandinfo_t
 {
     /*
     * name of the verb
@@ -93,9 +113,10 @@ struct verbinfo_t
     /*
     * destination functions
     */
-    procfn_pre_t  prefunc;
-    procfn_post_t postfunc;
-    procfn_main_t mainfunc;
+    bits_prefunc_t  prefunc;
+    bits_postfunc_t postfunc;
+    bits_mainfunc_t mainfunc;
+    bits_compfunc_t compfunc;
 
     /*
     * read at least this much data at once.
@@ -147,12 +168,6 @@ static const char printable_chartab[] =
     " \t\n\r\x0b\x0c"
 ;
 
-static const char base64_chartab[] =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    "abcdefghijklmnopqrstuvwxyz"
-    "0123456789+/"
-;
-
 static const char htmtentity_chartab[] =
     "#"
     "0123456789"
@@ -183,7 +198,7 @@ PROTO(cstring);
 PROTO(count);
 
 
-static const struct verbpair_t funcs[] =
+static const struct bits_commpair_t funcs[] =
 {
     MKENTRY(tolower),
     MKENTRY(toupper),

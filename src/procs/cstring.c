@@ -1,7 +1,7 @@
 
 #include "private.h"
 
-#define CST_CHARFMT      "0x%08X,"
+#define CST_CHARFMT      "0x%04X,"
 #define CST_MAXLINESIZE  10
 
 /*
@@ -43,14 +43,16 @@ static void fnpost(void* ptr)
 
 static size_t fnmain(char* buf, const char* inp, size_t len, void* ptr)
 {
+    int ch;
     struct cstringinfo_t* cst;
     (void)buf;
     (void)inp;
     (void)len;
+    ch = ((int*)inp)[0];
     cst = (struct cstringinfo_t*)ptr;
     cst->linelen++;
     cst->datalen++;
-    fprintf(cst->outfile, CST_CHARFMT, (int)(inp[0]));
+    fprintf(cst->outfile, CST_CHARFMT, ch);
     if(cst->linelen == CST_MAXLINESIZE)
     {
         fprintf(cst->outfile, "\n    ");
@@ -63,12 +65,12 @@ static size_t fnmain(char* buf, const char* inp, size_t len, void* ptr)
     return 0;
 }
 
-void btf_cstring_info(struct verbinfo_t* inf)
+void btf_cstring_info(struct bits_commandinfo_t* inf)
 {
     inf->prefunc = fnpre;
     inf->postfunc = fnpost;
     inf->mainfunc = fnmain;
-    inf->readthismuch = 2;
+    inf->readthismuch = 1;
     inf->ifbeginswith = 0;
     inf->ifendswith = 0;
     inf->delimiter = 0;
