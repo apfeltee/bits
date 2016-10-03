@@ -56,11 +56,12 @@ void btf_htmldec_info(struct bits_commandinfo_t* inf)
     inf->postfunc = fnpost;
     inf->mainfunc = fnmain;
     inf->readthismuch = 1;
-    inf->ifbeginswith = '&';
-    inf->ifendswith = ';';
     inf->delimiter = 0;
     inf->comargs = 0;
     inf->buffersize = 50;
+    /* pattern here matching '&amp;' - the text between '&' and ';' can only be [a-zA-Z0-9] afaik */
+    inf->ifbeginswith = '&';
+    inf->ifendswith = ';';
     inf->validchars = htmtentity_chartab;
     inf->description = "decode html entities";
 };
