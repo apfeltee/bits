@@ -1,219 +1,155 @@
 
 #pragma once
+#include <iostream>
+#include <fstream>
+#include <iomanip>
+#include <algorithm>
+#include <functional>
+#include <thread>
+#include <list>
+#include <vector>
+#include <map>
+#include <locale>
+#include <cctype>
+#include <string>
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <inttypes.h>
-#include <ctype.h>
-#include <string.h>
+// 3rdparty header(s)
+#include "optionparser.hpp"
 
-#define PROTO(procname) \
-    extern void btf_##procname##_info(struct bits_commandinfo_t* inf); \
-
-#define MKENTRY(fname) \
-    {#fname, btf_##fname##_info}
-
-#define newstruct(typ) (typ*)malloc(sizeof(typ))
-
-/* these are only allocated once per run, rather than allocating over and over again each loop */
-enum
+namespace Bits
 {
-    /* maximum size of the input buffer */
-    kMaxInSize = 512,
+    namespace Util
+    {
+        /* CmdParser installs some default options */
+        class CmdParser: public OptionParser
+        {
+            public:
+                CmdParser()
+                {
+                }
+        };
 
-    /* maximum size of the output buffer */
-    kMaxOutSize = 512,
-};
+        template<typename CharType>
+        const std::ctype<CharType>& GetFacet()
+        {
+            return std::use_facet<std::ctype<CharType>>(std::locale());
+        }
 
-struct bits_commandinfo_t;
+        namespace String
+        {
+            
+        }
 
-typedef size_t(*bits_mainfunc_t)(
-    /*
-    * output buffer. output should be appended to this buffer
-    */
-    char*,
+        template<typename... Args>
+        void Fail(Args&&... args)
+        {
+            std::stringstream buf;
+            ((buf << args), ...);
+            std::cerr << "ERROR: " << buf.str() << std::endl;
+            std::exit(1);
+        }
 
-    /*
-    * input chunk
-    */
-    const char*,
+        template<typename Type, typename CharT>
+        bool ParseAs(const std::basic_string<CharT>& str, Type& dest)
+        {
+            std::basic_stringstream<CharT> ssbuf;
+            ssbuf << str;
+            if((ssbuf >> dest))
+            {
+                return true;
+            }
+            return false;
+        }
 
-    /*
-    * size of input chunk
-    */
-    size_t,
+        template<typename Type, typename CharT>
+        Type ParseAsOrFail(
+            const std::basic_string<CharT>& str,
+            const std::basic_string<CharT>& errmsg=std::basic_string<CharT>())
+        {
+            Type ret;
+            if(ParseAs<Type>(str, ret) == false)
+            {
+                Fail("ParseAs() failed for \"", str, "\"", (errmsg.empty() ? "" : ": "), errmsg);
+            }
+            return ret;
+        }
+    }
 
-    /*
-    * user pointer
-    */
-    void*
-);
+    struct ProcInfo;
+    using ArgList        = std::vector<std::string>;
+    using ContextPtr     = void*;
+    using ProcFuncInfo   = std::function<ProcInfo*()>;
+    using ProcFuncInit   = std::function<ContextPtr(Util::CmdParser&, const ArgList&)>;
+    using ProcFuncFinish = std::function<void(ContextPtr)>;
+    using ProcFuncMain   = std::function<int(std::istream&, std::ostream&, ContextPtr)>;
+    using ProcList       = std::map<std::string, ProcFuncInfo>;
 
-typedef void* (*bits_prefunc_t)(
-    /*
-    * options passed through the command line. will be NULL if spec does not specify
-    * if the verb needs any.
-    */
-    const char**,
+    class ProcInfo
+    {
+        private:
+            std::string m_name;
+            ProcFuncInit m_initfunc;
+            ProcFuncFinish m_finishfunc;
+            ProcFuncMain m_mainfunc;
+            std::string m_description;
+            Util::CmdParser m_parser;
+            ContextPtr m_context;
+            bool m_isinitiated;
 
-    /* input file handle */
-    FILE*,
+    public:
+        ProcInfo(
+            ProcFuncInit fninit,
+            ProcFuncFinish fnfini,
+            ProcFuncMain fnmain,
+            const std::string& desc
+        ):
+            m_initfunc(fninit),
+            m_finishfunc(fnfini),
+            m_mainfunc(fnmain),
+            m_description(desc),
+            m_isinitiated(false)
+        {
+        }
 
-    /* output file handle */
-    FILE*
-);
+        ~ProcInfo()
+        {
+            if(m_isinitiated)
+            {
+                m_finishfunc(m_context);
+            }
+        }
 
-typedef void (*bits_postfunc_t)(
-    /* user data */
-    void*
-);
+        Util::CmdParser& parser()
+        {
+            return m_parser;
+        }
 
-typedef void (*bits_compfunc_t)(
-    /*
-    * output buffer. output should be appended to this buffer
-    */
-    char*,
+        std::string name() const
+        {
+            return m_name;
+        }
 
-    /*
-    * input chunk
-    */
-    const char*,
+        std::string description() const
+        {
+            return m_description;
+        }
 
-    /*
-    * size of input chunk
-    */
-    size_t,
+        void init(const ArgList& args)
+        {
+            m_context = m_initfunc(m_parser, args);
+            m_isinitiated = true;
+        }
 
-    /* user data */
-    void*
-);
-
-/* the function that gets called to retrieve information about the verb */
-typedef void (*infofunc_t)(struct bits_commandinfo_t*);
-
-
-struct bits_commpair_t
-{
-    const char* verbname;
-    infofunc_t infofunc;
-};
-
-/*
-* as it stands, this struct is only going to get larger and more complicated from here.
-* sorry, though.
-*/
-struct bits_commandinfo_t
-{
-    /*
-    * name of the verb
-    */
-    const char* fname;
-
-    /*
-    * destination functions
-    */
-    bits_prefunc_t  prefunc;
-    bits_postfunc_t postfunc;
-    bits_mainfunc_t mainfunc;
-    bits_compfunc_t compfunc;
-
-    /*
-    * read at least this much data at once.
-    * note that bt functions are intended to operate on singular chunks!
-    */
-    size_t readthismuch;
-
-    /*
-    * if chunk of input begins with this character, read chunk until $readthismuch
-    * requires change of read loop from fread to fgetc
-    * this would make deterministic transformation (i.e., url decode) possible
-    */
-    char ifbeginswith;
-
-    /*
-    * process chunk if it ends in this character. ignored if 0.
-    */
-    char ifendswith;
-
-    /*
-    * delimit data at this character. ignored if 0.
-    */
-    char delimiter;
-
-    /*
-    * additional command line arguments.
-    * i.e., if your verb is 'replace' that takes 2 arguments, $a being the string to be replaced, and
-    * $b being the replacement, you'd use 2.
-    */
-    int comargs;
-
-    /* size for the i/o buffer */
-    size_t buffersize;
-
-    /* todo: explain this one */
-    const char* validchars;
-
-    /*
-    * short description of what this verb does
-    */
-    const char* description;
-};
-
-static const char printable_chartab[] =
-    "0123456789"
-    "abcdefghijklmnopqrstuvwxyz"
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    "!\"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~"
-    " \t\n\r\x0b\x0c"
-;
-
-static const char htmtentity_chartab[] =
-    "#"
-    "0123456789"
-    "abcdefghijklmnopqrstuvwxyz"
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-;
-
-static const char hex_chartab[] =
-{
-    '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-    'a', 'b', 'c', 'd', 'e', 'f'
-};
-
-/* callback functions */
-PROTO(tolower);
-PROTO(toupper);
-PROTO(trimnull);
-PROTO(urlencode);
-PROTO(urldecode);
-PROTO(rot13);
-PROTO(base64enc);
-PROTO(htmlenc);
-PROTO(htmldec);
-PROTO(hexencode);
-PROTO(hexdecode);
-PROTO(replace);
-PROTO(cstring);
-PROTO(count);
+        int main(std::istream* inptr, std::ostream* outptr)
+        {
+            return m_mainfunc(*inptr, *outptr, m_context);
+        }
+        
+    };
 
 
-static const struct bits_commpair_t funcs[] =
-{
-    MKENTRY(tolower),
-    MKENTRY(toupper),
-    MKENTRY(trimnull),
-    MKENTRY(urlencode),
-    MKENTRY(urldecode),
-    MKENTRY(rot13),
-    MKENTRY(base64enc),
-    MKENTRY(htmlenc),
-    MKENTRY(htmldec),
-    MKENTRY(hexencode),
-    MKENTRY(hexdecode),
-    MKENTRY(replace),
-    MKENTRY(cstring),
-    MKENTRY(count),
-    {NULL, NULL},
-};
+}
 
+//#ifdef WANT_PROCS
+    #include "definedprocs.h"
+//#endif

@@ -1,21 +1,19 @@
 
 #include "private.h"
 
-static char rot13_char(int c)
+static bitchar_t rot13_char(int c)
 {
     int alpha;
     if(isalpha(c))
     {
-        alpha = islower(c) ? 'a' : 'A';
-        return (c - alpha + 13) % 26 + alpha;
+        alpha = (islower(c) ? 'a' : 'A');
+        return ((((c - alpha) + 13) % 26) + alpha);
     }
     return c;
 }
 
-
-static void* btf_rot13_pre(const char** comargs, FILE* infh, FILE* outfh)
+static void* btf_rot13_pre(FILE* infh, FILE* outfh)
 {
-    (void)comargs;
     (void)infh;
     (void)outfh;
     return NULL;
@@ -26,7 +24,7 @@ static void btf_rot13_post(void* ptr)
     (void)ptr;
 }
 
-static size_t btf_rot13_main(char* buf, const char* inp, size_t len, void* ptr)
+static size_t btf_rot13_main(bitchar_t* buf, const bitchar_t* inp, size_t len, void* ptr)
 {
     (void)len;
     (void)ptr;
@@ -43,7 +41,6 @@ void btf_rot13_info(struct bits_commandinfo_t* inf)
     inf->ifbeginswith = 0;
     inf->ifendswith = 0;
     inf->delimiter = 0;
-    inf->comargs = 0;
     inf->buffersize = 50;
     inf->validchars = NULL;
     inf->description = "performs ROT13 on input data";

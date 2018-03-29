@@ -12,9 +12,8 @@ struct base64enc_vars
     unsigned long width;
 };
 
-static void* fnpre(const char** comargs, FILE* infh, FILE* outfh)
+static void* fnpre(FILE* infh, FILE* outfh)
 {
-    (void)comargs;
     (void)infh;
     (void)outfh;
     struct base64enc_vars* bv;
@@ -28,7 +27,7 @@ static void fnpost(void* ptr)
     free((struct base64enc_vars*)ptr);
 }
 
-static size_t fnmain(char* buf, const char* inp, size_t len, void* ptr)
+static size_t fnmain(bitchar_t* buf, const bitchar_t* inp, size_t len, void* ptr)
 {
     unsigned long ofs;
     const unsigned char* uinp;
@@ -59,7 +58,6 @@ void btf_base64enc_info(struct bits_commandinfo_t* inf)
     inf->ifbeginswith = 0;
     inf->ifendswith = 0;
     inf->delimiter = 0;
-    inf->comargs = 0;
     inf->buffersize = 50;
     inf->validchars = NULL;
     inf->description = "base64-encode bytes";

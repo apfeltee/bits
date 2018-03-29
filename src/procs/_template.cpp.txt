@@ -1,0 +1,49 @@
+#include <cctype>
+#include "private.h"
+
+namespace Bits
+{
+    class $structname$
+    {
+        private:
+
+        public:
+    };
+
+    namespace DefinedProcs
+    {
+        static ContextPtr fninit(Util::CmdParser& prs, const ArgList& args)
+        {
+            auto ctx = new $structname$;
+            /* define options BEFORE calling parse() */
+            prs.parse(args);
+            return ctx;
+        }
+
+        static void fnfinish(ContextPtr ptr)
+        {
+            auto ctx = ($structname$*)ptr;
+            delete ctx;
+        }
+
+        static int fnmain(std::istream& inp, std::ostream& outp, ContextPtr ptr)
+        {
+            int ch;
+            auto ctx = ($structname$*)ptr;
+            while((ch = inp.get()) != EOF)
+            {
+                outp << ctx->dothing(ch);
+            }
+            return 0;
+        }
+
+        ProcInfo* fn_info_$procname$()
+        {
+            return new ProcInfo(
+                fninit, fnfinish, fnmain,
+                "description for this proc"
+            );
+        }
+    }
+}
+

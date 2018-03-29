@@ -1,9 +1,8 @@
 
 #include "private.h"
 
-static void* fnpre(const char** comargs, FILE* infh, FILE* outfh)
+static void* fnpre(FILE* infh, FILE* outfh)
 {
-    (void)comargs;
     (void)infh;
     (void)outfh;
     return NULL;
@@ -14,15 +13,24 @@ static void fnpost(void* ptr)
     (void)ptr;
 }
 
-static size_t fnmain(char* buf, const char* inp, size_t len, void* ptr)
+static size_t fnmain(bitchar_t* buf, const bitchar_t* inp, size_t len, void* ptr)
 {
+    bitchar_t inch;
     (void)len;
     (void)ptr;
-    buf[0] = tolower((int)inp[0]);
+    inch = inp[0];
+    if(is_alphabet(inch))
+    {
+        buf[0] = (inch ^ ' ');
+    }
+    else
+    {
+        buf[0] = inch;
+    }
     return 1;
 };
 
-void btf_tolower_info(struct bits_commandinfo_t* inf)
+void btf_togglecase_info(struct bits_commandinfo_t* inf)
 {
     inf->prefunc = fnpre;
     inf->postfunc = fnpost;
@@ -31,8 +39,7 @@ void btf_tolower_info(struct bits_commandinfo_t* inf)
     inf->ifbeginswith = 0;
     inf->ifendswith = 0;
     inf->delimiter = 0;
-    inf->comargs = 0;
     inf->buffersize = 10;
     inf->validchars = NULL;
-    inf->description = "transform bits to lowercase";
+    inf->description = "toggle case of letters";
 };

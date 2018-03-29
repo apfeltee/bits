@@ -5,16 +5,15 @@
 static bool istextchar(int ch)
 {
     /* not really sure if this is actually necessary */
-    if(strchr("<>&+`;\"'", ch) || (isprint(ch) == 0))
+    if(strchr("<>+`;\"'", ch) || (isprint(ch) == 0))
     {
         return false;
     }
     return true;
 }
 
-static void* fnpre(const char** comargs, FILE* infh, FILE* outfh)
+static void* fnpre(FILE* infh, FILE* outfh)
 {
-    (void)comargs;
     (void)infh;
     (void)outfh;
     return NULL;
@@ -25,15 +24,15 @@ static void fnpost(void* ptr)
     (void)ptr;
 }
 
-static  size_t fnmain(char* buf, const char* inp, size_t len, void* ptr)
+static size_t fnmain(bitchar_t* buf, const bitchar_t* inp, size_t len, void* ptr)
 {
-    int ch;
+    unsigned long ch;
     size_t cnt;
     size_t it;
     (void)len;
     (void)ptr;
     cnt = 0;
-    ch = inp[0];
+    ch = ((unsigned int*)inp)[0];
     /*
     * right now this'll only work for single character entities...
     * shoehorning unicode support for anything else seems hardly worth it
@@ -42,12 +41,13 @@ static  size_t fnmain(char* buf, const char* inp, size_t len, void* ptr)
     {
         for(it=0; html_entities[it].length != 0; it++)
         {
-            if(html_entities[it].length == 1)
+            if(html_entities[it].length == len)
             {
-                if(ch == html_entities[it].value[0])
+                if(memcmp(inp, html_entities[it].value, len) == 0)
                 {
+                    cnt = html_entities[it].entlength;
                     memcpy(buf, html_entities[it].entity, html_entities[it].entlength);
-                    return html_entities[it].entlength;
+                    return cnt;
                 }
             }
         }
@@ -55,14 +55,14 @@ static  size_t fnmain(char* buf, const char* inp, size_t len, void* ptr)
         * using itoa would probably be a tiny weeny itty bitty bit faster
         * but it's probably hardly worth it
         */
-        cnt = snprintf(buf, kMaxOutSize - 1, "&#%d;", (int)((unsigned char)ch));
+        cnt = snprintf((char*)buf, (kMaxOutSize - 1), "&#%ld;", ch);
         return cnt;
     }
     buf[0] = ch;
     return 1;
 }
 
-void btf_htmlenc_info(struct bits_commandinfo_t* inf)
+void btf_htmlencode_info(struct bits_commandinfo_t* inf)
 {
     inf->prefunc = fnpre;
     inf->postfunc = fnpost;
@@ -71,7 +71,6 @@ void btf_htmlenc_info(struct bits_commandinfo_t* inf)
     inf->ifbeginswith = 0;
     inf->ifendswith = 0;
     inf->delimiter = 0;
-    inf->comargs = 0;
     inf->buffersize = 50;
     inf->validchars = NULL;
     inf->description = "encode entities for html (greedy)";

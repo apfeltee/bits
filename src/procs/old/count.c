@@ -7,10 +7,9 @@ struct countbytes_t
     FILE* outfile;
 };
 
-static void* fnpre(const char** comargs, FILE* infh, FILE* outfh)
+static void* fnpre(FILE* infh, FILE* outfh)
 {
     struct countbytes_t* cnt;
-    (void)comargs;
     (void)infh;
     (void)outfh;
     cnt = newstruct(struct countbytes_t);
@@ -27,7 +26,7 @@ static void fnpost(void* ptr)
     free(cnt);
 }
 
-static size_t fnmain(char* buf, const char* inp, size_t len, void* ptr)
+static size_t fnmain(bitchar_t* buf, const bitchar_t* inp, size_t len, void* ptr)
 {
     struct countbytes_t* cnt;
     (void)buf;
@@ -46,7 +45,6 @@ void btf_count_info(struct bits_commandinfo_t* inf)
     inf->ifbeginswith = 0;
     inf->ifendswith = 0;
     inf->delimiter = 0;
-    inf->comargs = 0;
     inf->buffersize = 50;
     inf->validchars = NULL;
     inf->description = "count bytes read";
