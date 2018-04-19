@@ -76,13 +76,22 @@ namespace Bits
     }
 
     struct ProcInfo;
+    struct ProcDefinition;
+
     using ArgList        = std::vector<std::string>;
     using ContextPtr     = void*;
     using ProcFuncInfo   = std::function<ProcInfo*()>;
     using ProcFuncInit   = std::function<ContextPtr(Util::CmdParser&, const ArgList&)>;
     using ProcFuncFinish = std::function<void(ContextPtr)>;
     using ProcFuncMain   = std::function<int(std::istream&, std::ostream&, ContextPtr)>;
-    using ProcList       = std::map<std::string, ProcFuncInfo>;
+    struct ProcDefinition
+    {
+        char singlename;
+        std::string shortname;
+        std::string longname;
+        ProcFuncInfo funcinfo;
+    };
+    using ProcList       = std::map<std::string, ProcDefinition>;
 
     class ProcInfo
     {

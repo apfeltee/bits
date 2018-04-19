@@ -81,7 +81,7 @@ namespace Bits
         {
             return new ProcInfo(
                 fninit, fnfinish, fnmain,
-                "description for this proc"
+                "encode data as base64"
             );
         }
     }

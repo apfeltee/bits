@@ -1,9 +1,14 @@
 bits.exe
 bits
-n.h
-./n.h
 src/entities_generated.h
 
+# assorted temporary files
+out.*
+tmp.*
+new.*
+old.*
+n.h
+./n.h
 
 # Object files
 *.o

@@ -11,14 +11,19 @@ static void prepare_io()
 
 static void usage(OptionParser& prs, char** argv)
 {
+    char singlename;
     std::string name;
+    std::string desc;
+    Bits::ProcDefinition procdef;
     Bits::ProcInfo* info;
     prs.help(std::cout);
     std::cout << "supported commands (try '" << argv[0] << " <command> --help'):" << std::endl;
     for(auto pair: Bits::DefinedProcs::procs)
     {
         name = pair.first;
-        info = (pair.second)();
+        procdef = pair.second;
+        info = procdef.funcinfo();
+        desc = info->description();
         std::cout << "  " << std::setw(10) << name  << ": " << info->description() << std::endl;
         delete info;
     }
@@ -28,11 +33,22 @@ static void usage(OptionParser& prs, char** argv)
 
 static Bits::ProcInfo* findproc(const std::string& procname)
 {
-    if(Bits::DefinedProcs::procs.find(procname) == Bits::DefinedProcs::procs.end())
+    bool issingle;
+    char singlename;
+    std::string realprocname;
+    Bits::ProcDefinition procdef;
+    issingle = (procname.size() == 1);
+    singlename = (issingle ? procname[0] : 0);
+    for(auto pair: Bits::DefinedProcs::procs)
     {
-        return nullptr;
+        realprocname = pair.first;
+        procdef = pair.second;
+        if((procdef.singlename == singlename) || (procdef.shortname == procname) || (procdef.longname == procname))
+        {
+            return procdef.funcinfo();
+        }
     }
-    return Bits::DefinedProcs::procs[procname]();
+    return nullptr;
 }
 
 
@@ -47,8 +63,9 @@ static Bits::ProcInfo* handleproc(const std::string& name)
     else
     {
         std::cerr << "no such command: " << name << std::endl;
+        std::exit(1);
     }
-    return 0;
+    return nullptr;
 }
 
 static std::istream* open_file(const std::string& fname)
@@ -62,21 +79,54 @@ static std::istream* open_file(const std::string& fname)
     return nullptr;
 }
 
+static int do_proc(const std::string& procname, const Bits::ArgList& rest, std::istream* inp, std::ostream* outp)
+{
+    size_t i;
+    int ret;
+    std::string filename;
+    std::istream* tmpinp;
+    Bits::ProcInfo* info;
+    Bits::ArgList args;
+    ret = 0;
+    info = handleproc(procname);
+    info->init(rest);
+    args = info->parser().positional();
+    if(args.size() > 0)
+    {
+        for(i=0; i<args.size(); i++)
+        {
+            filename = args[i];
+            tmpinp = open_file(filename);
+            if(tmpinp == nullptr)
+            {
+                std::cerr << "failed to open '" << filename << "' for reading" << std::endl;
+                return 1;
+            }
+            inp = tmpinp;
+            ret = info->main(inp, outp);
+            delete tmpinp;
+        }
+    }
+    else
+    {
+        ret = info->main(inp, outp);
+    }
+    delete info;
+    return ret;
+}
+
 int main(int argc, char* argv[])
 {
-    int ret;
-    size_t i;
+    
+    
     std::string filename;
     std::string procname;
     std::istream* tmpinp;
     std::istream* inputstream;
     std::ostream* outputstream;
     Bits::ArgList rest;
-    Bits::ArgList args;
-    Bits::ProcInfo* info;
     OptionParser prs;
     std::ios::sync_with_stdio(false);
-    ret = 0;
     inputstream = &std::cin;
     outputstream = &std::cout;
     prs.on({"-h", "--help"}, "show this help", [&]
@@ -103,31 +153,7 @@ int main(int argc, char* argv[])
         {
             procname = rest[0];
             rest.erase(rest.begin());
-            info = handleproc(procname);
-            info->init(rest);
-            args = info->parser().positional();
-            if(args.size() > 0)
-            {
-                for(i=0; i<args.size(); i++)
-                {
-                    filename = args[i];
-                    tmpinp = open_file(filename);
-                    if(tmpinp == nullptr)
-                    {
-                        std::cerr << "failed to open '" << filename << "' for reading" << std::endl;
-                        return 1;
-                    }
-                    inputstream = tmpinp;
-                    ret = info->main(inputstream, outputstream);
-                    delete tmpinp;
-                }
-            }
-            else
-            {
-                ret = info->main(inputstream, outputstream);
-            }
-            delete info;
-            return ret;
+            return do_proc(procname, rest, inputstream, outputstream);
         }
         else
         {
@@ -144,6 +170,7 @@ int main(int argc, char* argv[])
     catch(...)
     {
         std::cerr << "unhandled exception" << std::endl;
+        return 1;
     }
     return 0;
 }

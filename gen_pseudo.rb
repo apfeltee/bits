@@ -2,11 +2,24 @@
 
 require "json"
 
-=begin
-{
-    "circled": [
-        [97, "\u{24d0}", "&#x24D0;", [226, 147, 144]],
-=end
+# this array contains alphabets that are broken for one reason or another
+BROKEN_ALPHABET_EXCLUDE = [
+  "invertedbackwards",
+  "mathbold",
+  "mathboldfraktur",
+  "mathbolditalic",
+  "mathboldscript",
+  "mathdoublestruck",
+  "mathmonospace",
+  "mathsans",
+  "mathsansbold",
+  "mathsansbolditalic",
+  "mathsansitalic",
+  "mathfraktur",
+  "regionalindicator",
+  #"squared",
+  #"squaredneg",
+]
 
 HEAD = <<__EOF__
 #pragma once
@@ -41,17 +54,19 @@ begin
   alphabets = JSON.load($stdin.read)
   puts(HEAD)
   alphabets.each do |name, data|
-    printf("%s{%p, {\n", space*2, name)
-    data.each do |item|
-      ansiicode = item[0]
-      unicodeescape = item[1]
-      htmlentity = item[2]
-      codepoints = item[3]
-      unistr = sprintf("\"%s\"", unicodeescape.bytes.map{|d| sprintf("\\x%02X", d)}.join());
-      cpstr = sprintf("{%s}", codepoints.join(","))
-      printf("%s{%d, %s, %p, %s},\n", space*3, ansiicode, unistr, htmlentity, cpstr);
+    if not BROKEN_ALPHABET_EXCLUDE.include?(name) then
+      printf("%s{%p, {\n", space*2, name)
+      data.each do |item|
+        ansiicode = item[0]
+        unicodeescape = item[1]
+        htmlentity = item[2]
+        codepoints = item[3]
+        unistr = sprintf("\"%s\"", unicodeescape.bytes.map{|d| sprintf("\\x%02X", d)}.join());
+        cpstr = sprintf("{%s}", codepoints.join(","))
+        printf("%s{%d, %s, %p, %s},\n", space*3, ansiicode, unistr, htmlentity, cpstr);
+      end
+      printf("%s}},\n", space*2);
     end
-    printf("%s}},\n", space*2);
   end
   puts(TAIL)
 end

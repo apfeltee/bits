@@ -7,21 +7,44 @@ namespace Bits
     {
         int rotationlevel = 13;
 
-        Rot13(int rt): rotationlevel(rt)
-        {
-        }
-
         Rot13()
         {
         }
 
-        int rotate(int ch)
+        Rot13(int rt): rotationlevel(rt)
         {
+        }
+
+        int oldrotate(int ch)
+        {
+            int tmp;
             int alpha;
-            if(std::isalpha(ch))
+            if(std::isspace(ch))
+            {
+                return ch;
+            }
+            else if(std::isalpha(ch))
             {
                 alpha = (std::islower(ch) ? 'a' : 'A');
                 return ((((ch - alpha) + rotationlevel) % 26) + alpha);
+            }
+            else
+            {
+                tmp = ch + rotationlevel;
+
+            }
+            return ch;
+        }
+
+        int rotate(int ch)
+        {
+            if((('a' <= ch) && (ch <= 'm')) || (('A' <= ch) && (ch <= 'M')))
+            {
+                return (ch + rotationlevel);
+            }
+            if((('n' <= ch) && (ch <= 'z')) || (('N' <= ch) && (ch <= 'Z')))
+            {
+                return (ch - rotationlevel);
             }
             return ch;
         }

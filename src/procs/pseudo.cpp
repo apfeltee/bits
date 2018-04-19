@@ -12,6 +12,9 @@ namespace Bits
             bool m_alphdefined = false;
 
         public:
+            bool want_unicode = true;
+
+        public:
             GenPseudo()
             {}
 
@@ -32,7 +35,7 @@ namespace Bits
                 return true;
             }
 
-            void writeRune(int ch, std::ostream& out)
+            void writeRune(int ch, std::ostream& out, bool ovunicode) const
             {
                 int asciicode;
                 bool wroterune;
@@ -42,7 +45,14 @@ namespace Bits
                     asciicode = it->asciicode;
                     if(ch == asciicode)
                     {
-                        out << it->unicodeescape;
+                        if(ovunicode)
+                        {
+                            out << it->unicodeescape;
+                        }
+                        else
+                        {
+                            out << it->htmlentity;
+                        }
                         wroterune = true;
                         break;
                     }
@@ -52,7 +62,37 @@ namespace Bits
                     out << char(ch);
                 }
             }
+
+            void writeRune(int ch, std::ostream& out) const
+            {
+                return writeRune(ch, out, want_unicode);
+            }
+
+            void writeRuneString(const std::string& str, std::ostream& out)
+            {
+                for(auto it=str.begin(); it!=str.end(); it++)
+                {
+                    writeRune(*it, out, true);
+                }
+            }
     };
+
+    static void writeAvailable()
+    {
+        GenPseudo pseudo;
+        std::string alphname;
+        std::string sampletext;
+        sampletext = "Hello World!";
+        std::cout << "available pseudo alphabets (sample text: \"" << sampletext << "\"):" << std::endl;
+        for(auto it=PseudoAlphabet::All.begin(); it!=PseudoAlphabet::All.end(); it++)
+        {
+            alphname = it->first;
+            pseudo.loadAlphabet(alphname);
+            std::cout << "  - " << std::setw(20) << alphname << ": ";
+            pseudo.writeRuneString(sampletext, std::cout);
+            std::cout << std::endl;
+        }
+    }
 
     namespace DefinedProcs
     {
@@ -66,19 +106,19 @@ namespace Bits
                     Util::Fail("cannot load alphabet named \"", name, "\"");
                 }
             });
+            prs.on({"-e", "--entities"}, "emit HTML entities instead of unicode characters", [&]
+            {
+                ctx->want_unicode = false;
+            });
             prs.on({"-l", "--list"}, "list available pseudo alphabets", [&]
             {
-                std::cout << "available pseudo alphabets:" << std::endl;
-                for(auto it=PseudoAlphabet::All.begin(); it!=PseudoAlphabet::All.end(); it++)
-                {
-                    std::cout << "  - \"" << it->first << "\"" << std::endl;
-                }
+                writeAvailable();
                 std::exit(0);
             });
             prs.parse(args);
             if(ctx->haveAlphabet() == false)
             {
-                Util::Fail("no alphabet specified! use '--alphabet' to specify an alphabet");
+                Util::Fail("no alphabet specified! use '--alphabet=<name>' to specify an alphabet; use '--list' to list alphabets.");
             }
             return ctx;
         }
@@ -104,7 +144,7 @@ namespace Bits
         {
             return new ProcInfo(
                 fninit, fnfinish, fnmain,
-                "description for this proc"
+                "turn alphanumeric characters into pseudoalphabetic characters"
             );
         }
     }

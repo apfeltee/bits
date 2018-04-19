@@ -1,5 +1,5 @@
 
-commandlinedir = ../../optionparser/include
+commandlinedir = ../optionparser/include
 CXX = g++ -std=c++17 -Wall -Wextra
 CFLAGS = -Isrc -Os -I$(commandlinedir)
 LFLAGS = -g3 -ggdb
