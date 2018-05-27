@@ -86,8 +86,6 @@ namespace Bits
     using ProcFuncMain   = std::function<int(std::istream&, std::ostream&, ContextPtr)>;
     struct ProcDefinition
     {
-        char singlename;
-        std::string shortname;
         std::string longname;
         ProcFuncInfo funcinfo;
     };

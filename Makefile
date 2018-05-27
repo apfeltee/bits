@@ -1,8 +1,10 @@
 
 commandlinedir = ../optionparser/include
-CXX = g++ -std=c++17 -Wall -Wextra
-CFLAGS = -Isrc -Os -I$(commandlinedir)
-LFLAGS = -g3 -ggdb
+CXX     = g++ -std=c++17 -Wall -Wextra
+CFLAGS  = -Isrc -I$(commandlinedir)
+#CFLAGS += Os
+CFLAGS += -g3 -ggdb
+LFLAGS  = -g3 -ggdb
 
 ##########################
 RM = rm -f

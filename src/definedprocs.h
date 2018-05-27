@@ -4,8 +4,8 @@
 #define DEFPROTO(longname) \
     ProcInfo* fn_info_##longname();
 
-#define DEFITEM(singlename, shortname, longname) \
-    {#longname, ProcDefinition{singlename, shortname, #longname, fn_info_##longname}}
+#define DEFITEM(longname) \
+    {#longname, ProcDefinition{#longname, fn_info_##longname}}
 
 namespace Bits
 {
@@ -23,15 +23,15 @@ namespace Bits
 
         static ProcList procs =
         {
-            DEFITEM('c', "ca", case),
-            DEFITEM('s', "sp", sponge),
-            DEFITEM('d', "du", dump),
-            DEFITEM('t', "tr", trim),
-            DEFITEM('h', "ht", html),
-            DEFITEM('b', "b64", base64),
-            DEFITEM('r', "r13", rot13),
-            DEFITEM('p', "ps", pseudo),
-            DEFITEM(0,   "co", count),
+            DEFITEM(case),
+            DEFITEM(sponge),
+            DEFITEM(dump),
+            DEFITEM(trim),
+            DEFITEM(html),
+            DEFITEM(base64),
+            DEFITEM(rot13),
+            DEFITEM(pseudo),
+            DEFITEM(count),
         };
     }
 }
