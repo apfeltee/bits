@@ -1,6 +1,10 @@
 bits.exe
 bits
+*.exe
 src/entities_generated.h
+*.stackdump
+*.core
+*.dmp
 
 # assorted temporary files
 out.*

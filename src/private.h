@@ -20,6 +20,60 @@ namespace Bits
 {
     namespace Util
     {
+        template<typename First, typename Second>
+        class SortableMap
+        {
+            public:
+                using PairType   = std::pair<First, Second>;
+                using VectorType = std::vector<PairType>;
+
+            protected:
+                VectorType m_vector;
+
+            public:
+                void push(const First& first, const Second& second)
+                {
+                    m_vector.push_back(std::make_pair(first, second));
+                }
+
+                bool hasKey(const First& first, size_t& indexdest)
+                {
+                    size_t idx;
+                    for(idx=0; idx<m_vector.size(); idx++)
+                    {
+                        if(m_vector[idx].first == first)
+                        {
+                            indexdest = idx;
+                            return true;
+                        }
+                    }
+                    return false;
+                }
+
+                PairType& at(size_t idx)
+                {
+                    return m_vector[idx];
+                }
+
+                auto begin()
+                {
+                    return m_vector.begin();
+                }
+
+                auto end()
+                {
+                    return m_vector.end();
+                }
+        };
+
+
+        namespace String
+        {
+            std::ostream& EscapeByte(std::ostream& out, int byte, bool addslashes);
+            std::string EscapeByte(int byte, bool addslashes);
+            std::string EscapeString(const std::string& str, bool addslashes);
+        }
+
         /* CmdParser installs some default options */
         class CmdParser: public OptionParser
         {
@@ -77,7 +131,6 @@ namespace Bits
 
     struct ProcInfo;
     struct ProcDefinition;
-
     using ArgList        = std::vector<std::string>;
     using ContextPtr     = void*;
     using ProcFuncInfo   = std::function<ProcInfo*()>;
@@ -95,19 +148,41 @@ namespace Bits
     {
         private:
             std::string m_name;
+            /* the three applet functions */
             ProcFuncInit m_initfunc;
             ProcFuncFinish m_finishfunc;
             ProcFuncMain m_mainfunc;
+            /* the description*/
             std::string m_description;
+            /* the pre-initialized commandline parser */
             Util::CmdParser m_parser;
+            /* the pointer that may (or may not!) hold shared context data */
             ContextPtr m_context;
+            /*
+            * whether this applet has been fully initiated - i.e., m_initfunc has been called.
+            * it's reset to false after m_finishfunc is called, although, since m_finishfunc
+            * gets called in the destructor, this really shouldn't matter.
+            */
             bool m_isinitiated;
 
     public:
         ProcInfo(
+            /*
+            * the function that initiates the applet, i.e., by creating
+            * instances of classes, etc
+            */
             ProcFuncInit fninit,
+            /*
+            * the function that cleans up whatever fninit created
+            */
             ProcFuncFinish fnfini,
+            /*
+            * the function that performs the actual meat of the applet
+            */
             ProcFuncMain fnmain,
+            /*
+            * some descriptive text
+            */
             const std::string& desc
         ):
             m_initfunc(fninit),
@@ -123,6 +198,7 @@ namespace Bits
             if(m_isinitiated)
             {
                 m_finishfunc(m_context);
+                m_isinitiated = false;
             }
         }
 
@@ -153,8 +229,6 @@ namespace Bits
         }
         
     };
-
-
 }
 
 //#ifdef WANT_PROCS

@@ -20,6 +20,7 @@ namespace Bits
         DEFPROTO(rot13);
         DEFPROTO(pseudo);
         DEFPROTO(count);
+        DEFPROTO(entropy);
 
         static ProcList procs =
         {
@@ -32,6 +33,7 @@ namespace Bits
             DEFITEM(rot13),
             DEFITEM(pseudo),
             DEFITEM(count),
+            DEFITEM(entropy),
         };
     }
 }
