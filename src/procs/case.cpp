@@ -63,15 +63,15 @@ namespace Bits
         static ContextPtr fninit(Util::CmdParser& prs, const ArgList& args)
         {
             auto chcase = new ChangeCase;
-            prs.on("-l", "--tolower", "turn characters lowercase", [&]
+            prs.on({"-l", "--tolower"}, "turn characters lowercase", [&]
             {
                 chcase->setAction(ChangeCase::ToLower);
             });
-            prs.on("-u", "--toupper", "turn characters uppercase", [&]
+            prs.on({"-u", "--toupper"}, "turn characters uppercase", [&]
             {
                 chcase->setAction(ChangeCase::ToUpper);
             });
-            prs.on("-t", "--toggle", "toggle casing of characters", [&]
+            prs.on({"-t", "--toggle"}, "toggle casing of characters", [&]
             {
                 chcase->setAction(ChangeCase::Toggle);
             });

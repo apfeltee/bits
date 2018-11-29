@@ -23,6 +23,7 @@ generated_pseudo = src/generated/pseudoalphabets.h
 headers          = src/private.h
 sources_lib      = src/util.cpp $(wildcard src/procs/*.cpp)
 sources_exe      = src/main.cpp
+generated_src    = $(generated_ent) $(generated_pseudo)
 objects_lib      = $(sources_lib:.cpp=.o)
 objects_exe      = $(sources_exe:.cpp=.o)
 objects          = $(objects_lib) $(objects_exe)
@@ -30,9 +31,12 @@ sources          = $(sources_lib) $(sources_exe)
 
 ##########################
 
-all: $(generated_ent) $(generated_pseudo) $(exename)
+all: $(generated_src) $(exename)
 
-$(exename): $(sources) $(headers) $(objects)
+$(sources): $(generated_src)
+$(headers): $(generated_src)
+
+$(exename): $(sources) $(headers) $(objects) $(generated_src)
 	$(CXX) $(objects) -o $(exename) $(LFLAGS)
 
 $(generated_ent): $(ent_jsonsrc)
@@ -42,7 +46,7 @@ $(generated_pseudo): $(pseudo_jsonsrc)
 	ruby gen_pseudo.rb < $(pseudo_jsonsrc) > $(generated_pseudo)
 
 $(ent_jsonsrc):
-	wget $(ent_urlsrc) -O $(ent_jsonsrc)
+#	wget $(ent_urlsrc) -O $(ent_jsonsrc)
 
 help:
 	@echo "available targets:"
@@ -61,8 +65,10 @@ clean:
 distclean: clean
 	$(RM) $(exename)
 
+# best not to delete entities.json - it never really changes
+# and it will break the build when offline!
 springclean: distclean
-	$(RM) $(ent_jsonsrc)
+#	$(RM) $(ent_jsonsrc)
 	$(RM) $(generated_ent)
 	$(RM) $(generated_pseudo)
 

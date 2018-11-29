@@ -4,6 +4,7 @@ require "json"
 
 # this array contains alphabets that are broken for one reason or another
 BROKEN_ALPHABET_EXCLUDE = [
+=begin
   "invertedbackwards",
   "mathbold",
   "mathboldfraktur",
@@ -19,6 +20,7 @@ BROKEN_ALPHABET_EXCLUDE = [
   "regionalindicator",
   #"squared",
   #"squaredneg",
+=end
 ]
 
 HEAD = <<__EOF__
@@ -34,7 +36,11 @@ namespace PseudoAlphabet
         int asciicode;
         const char* unicodeescape;
         const char* htmlentity;
+        #if 0
         std::array<int, 5> codepoints;
+        #else
+        std::vector<int> codepoints;
+        #endif
     };
   
     using Alphabet = std::vector<Item>;

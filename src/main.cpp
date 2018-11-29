@@ -200,9 +200,9 @@ int main(int argc, char* argv[])
     {
         usage(prs, argv);
     });
-    prs.on({"-i?", "--input=?"}, "set input file (default: read from stdin)", [&](const std::string& filename)
+    prs.on({"-i?", "--input=?"}, "set input file (default: read from stdin)", [&](const OptionParser::Value& filename)
     {
-        tmpinp = open_file_read(filename);
+        tmpinp = open_file_read(filename.str());
         if(tmpinp)
         {
             inputstream = tmpinp;
@@ -238,10 +238,12 @@ int main(int argc, char* argv[])
         std::cerr << "parsing failed: " << e.what() << std::endl;
         return 1;
     }
+    /*
     catch(...)
     {
         std::cerr << "unhandled exception" << std::endl;
         return 1;
     }
+    */
     return 0;
 }

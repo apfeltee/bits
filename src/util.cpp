@@ -7,6 +7,7 @@ namespace Bits
     {
         namespace String
         {
+
             std::ostream& EscapeByte(std::ostream& out, int byte, bool addslashes)
             {
                 if((byte == '"') && addslashes)

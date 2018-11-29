@@ -37,6 +37,8 @@ namespace Bits
 
             void writeRune(int ch, std::ostream& out, bool ovunicode) const
             {
+                size_t ari;
+                int byteval;
                 int asciicode;
                 bool wroterune;
                 wroterune = false;
@@ -47,7 +49,21 @@ namespace Bits
                     {
                         if(ovunicode)
                         {
-                            out << it->unicodeescape;
+                            /*
+                            * this will almost definitely not work for more complex
+                            * pseudo alphabets. no idea why.
+                            */
+                            //out << it->unicodeescape;
+                            for(ari=0; ari<it->codepoints.size(); ari++)
+                            //for(auto byteval: it->codepoints)
+                            {
+                                byteval = it->codepoints[ari];
+                                if(byteval == 0)
+                                {
+                                    break;
+                                }
+                                out << char(byteval);
+                            }
                         }
                         else
                         {
@@ -99,8 +115,9 @@ namespace Bits
         static ContextPtr fninit(Util::CmdParser& prs, const ArgList& args)
         {
             auto ctx = new GenPseudo;
-            prs.on({"-a?", "--alphabet=?"}, "select alphabet", [&](const std::string& name)
+            prs.on({"-a?", "--alphabet=?"}, "select alphabet", [&](const OptionParser::Value& v)
             {
+                auto name = v.str();
                 if(ctx->loadAlphabet(name) == false)
                 {
                     Util::Fail("cannot load alphabet named \"", name, "\"");

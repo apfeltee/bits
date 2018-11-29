@@ -79,9 +79,9 @@ namespace Bits
         static ContextPtr fninit(Util::CmdParser& prs, const ArgList& args)
         {
             auto ctx = new BeanCounter;
-            prs.on({"-w?", "--word=?"}, "add word to search for", [&](const std::string& s)
+            prs.on({"-w?", "--word=?"}, "add word to search for", [&](const OptionParser::Value& s)
             {
-                ctx->addPhrase(s);
+                ctx->addPhrase(s.str());
             });
             prs.parse(args);
             return ctx;

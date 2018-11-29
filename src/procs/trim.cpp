@@ -78,16 +78,16 @@ namespace Bits
         {
             TrimState* tr;
             tr = new TrimState;
-            prs.on({"-c?", "--byte=?"}, "byte to trim. can be called multiple times. (default: '\\0')", [&](const std::string& v)
+            prs.on({"-c?", "--byte=?"}, "byte to trim. can be called multiple times. (default: '\\0')", [&](const OptionParser::Value& v)
             {
                 int byte;
-                if(deparse(v, byte))
+                if(deparse(v.str(), byte))
                 {
                     tr->push(byte);
                 }
                 else
                 {
-                    Util::Fail("failed to deparse \"", v, "\" into a byte");
+                    Util::Fail("failed to deparse \"", v.str(), "\" into a byte");
                 }
             });
             prs.parse(args);

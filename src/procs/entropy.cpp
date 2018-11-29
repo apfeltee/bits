@@ -148,9 +148,9 @@ namespace Bits
             {
                 ctx->opts().wantwords = true;
             });
-            prs.on({"-m?", "--mincount=?"}, "set minimum count", [&](const std::string& str)
+            prs.on({"-m?", "--mincount=?"}, "set minimum count", [&](const OptionParser::Value& str)
             {
-                ctx->opts().mincount = Util::ParseAsOrFail<std::size_t>(str);
+                ctx->opts().mincount = Util::ParseAsOrFail<std::size_t>(str.str());
             });
             prs.parse(args);
             return ctx;
