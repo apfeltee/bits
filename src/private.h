@@ -71,9 +71,10 @@ namespace Bits
 
         namespace String
         {
-            std::ostream& EscapeByte(std::ostream& out, int byte, bool addslashes);
-            std::string EscapeByte(int byte, bool addslashes);
-            std::string EscapeString(const std::string& str, bool addslashes);
+            std::ostream& ByteToHex(std::ostream& out, int byte, char backslashch='\\');
+            std::ostream& EscapeByte(std::ostream& out, int byte, bool addslashes, char backslashch='\\');
+            std::string   EscapeByte(int byte, bool addslashes);
+            std::string   EscapeString(const std::string& str, bool addslashes);
         }
 
         /* CmdParser installs some default options */

@@ -7,6 +7,9 @@ namespace Bits
 {
     namespace HackyGuts
     {
+        /*
+        * whether or a byte signifies a start or end of a codepoint
+        */
         bool maybe_codepoint(int byt)
         {
             return (
@@ -86,13 +89,13 @@ namespace Bits
             return -1;
         }
 
-        std::string codepoint_to_esc(const std::vector<int>& bytevec)
+        std::string codepoint_to_esc(const std::vector<int>& bytevec, char backslashch)
         {
             int cp;
             int rtlen;
             char buf[50];
             cp = codepoint(bytevec);
-            rtlen = sprintf(buf, "\\u{%x}", cp);
+            rtlen = sprintf(buf, "%cu{%x}", backslashch,  cp);
             return std::string(buf, rtlen);
         }
 
@@ -102,9 +105,10 @@ namespace Bits
     {
         struct DumpState
         {
+            char backslashch      = '\\';
             bool newline_after_nl = true;
             bool addslashes       = false;
-
+            bool hexonly          = false;
             // FIXME: should be set to false by default
             bool deparseunicode   = true;
 
@@ -114,43 +118,52 @@ namespace Bits
                 int nbyt;
                 int icount;
                 std::vector<int> bytevec;
-                // unicode codepoint ... starting .. point something-something?
-                //if((deparseunicode == true) && ((byte == 240) || (byte == 225)))
-                if((deparseunicode == true) && HackyGuts::maybe_codepoint(byte))
+                // -x overrides (most) other options, obviously
+                if(hexonly == true)
                 {
-                    icount = 0;
-                    bytevec.push_back(byte);
-                    // every other byte has to be >127
-                    // this is hacky as hell tho
-                    while(true) //(icount < 5)
+                    Util::String::ByteToHex(out, byte, backslashch);
+                }
+                else
+                {
+                    // unicode codepoint ... starting .. point something-something?
+                    if((deparseunicode == true) && HackyGuts::maybe_codepoint(byte))
                     {
-                        pk = inp.peek();
-                        /* chosen by fair round of hope-for-the-best */
-                        if(pk > 127)
+                        icount = 0;
+                        bytevec.push_back(byte);
+                        // would it be wise to keep count?
+                        // afaik, a codepoint typically does not use more than 4 specific bytes ...
+                        while(true) //(icount < 5)
                         {
-                            if(HackyGuts::maybe_codepoint(pk))
+                            pk = inp.peek();
+                            /* chosen by fair round of hope-for-the-best */
+                            if((pk > 127) && (HackyGuts::maybe_codepoint(pk) == false))
+                            {
+                                nbyt = inp.get();
+                                //std::cerr << "pushing byte " << int(nbyt) << std::endl;
+                                bytevec.push_back(nbyt);
+                            }
+                            else
                             {
                                 break;
                             }
-                            nbyt = inp.get();
-                            //std::cerr << "pushing byte " << int(nbyt) << std::endl;
-                            bytevec.push_back(nbyt);
+                            icount++;
                         }
-                        else
+                        // needs minimum of 2 bytes
+                        // TODO: better strategy in case of an error?
+                        //   + bail out (BAD!)
+                        //   + keep trying to interpret codepoints (optimistic, PRONE TO ERRORS)
+                        //   + dump bytes as-is (pessimistic)
+                        if(bytevec.size() > 1)
                         {
-                            break;
+                            out << HackyGuts::codepoint_to_esc(bytevec, backslashch);
+                            return;
                         }
-                        icount++;
                     }
-                    //std::cerr << "bytevec.size() = " << bytevec.size() << std::endl;
-                    // needs minimum of 2 bytes
-                    if(bytevec.size() > 1)
+                    else
                     {
-                        out << HackyGuts::codepoint_to_esc(bytevec);
-                        return;
+                        Util::String::EscapeByte(out, byte, addslashes, backslashch);
                     }
                 }
-                Util::String::EscapeByte(out, byte, addslashes);
                 if(byte == '\n')
                 {
                     if(newline_after_nl)
@@ -173,9 +186,17 @@ namespace Bits
             {
                 ds->addslashes = true;
             });
-            prs.on({"-u", "--unicode"}, "attempt to deparse unicode codepoints", [&]
+            prs.on({"-u", "--nounicode"}, "disable deparsing unicode codepoints", [&]
             {
-                ds->deparseunicode = true;
+                ds->deparseunicode = false;
+            });
+            prs.on({"-x", "--hexonly"}, "output hexadecimal escapes only (overturns -u and -q)", [&]
+            {
+                ds->hexonly = true;
+            });
+            prs.on({"-b?", "--escapechar=?"}, "specify escape character (default is backslash '\\')", [&](const OptionParser::Value& v)
+            {
+                ds->backslashch = v.str()[0];
             });
             prs.parse(args);
             return ds;

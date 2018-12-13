@@ -8,47 +8,72 @@ namespace Bits
         namespace String
         {
 
-            std::ostream& EscapeByte(std::ostream& out, int byte, bool addslashes)
+            std::ostream& ByteToHex(std::ostream& out, int byte, char backslashch)
+            {
+                if(byte == 0)
+                {
+                    out << backslashch << '0';
+                }
+                else
+                {
+                    /*
+                    * emit hexadecimal escape representation.
+                    * i.e., byte of value 1 is \x01, etc
+                    */
+                    out
+                        << backslashch
+                        << 'x'
+                        << std::setfill('0')
+                        << std::setw(2)
+                        << std::uppercase
+                        << std::hex
+                        << byte
+                    ;
+                }
+                return out;
+            }
+
+            std::ostream& EscapeByte(std::ostream& out, int byte, bool addslashes, char backslashch)
             {
                 if((byte == '"') && addslashes)
                 {
-                    out << '\\' << '"';
+                    out << backslashch << '"';
                 }
-                else if(byte == '\\')
+                else if(byte == backslashch)
                 {
-                    out << '\\' << '\\';
+                    out << backslashch << backslashch;
                 }
                 else if(byte == '\n')
                 {
-                    out << '\\' << 'n';
+                    out << backslashch << 'n';
                 }
                 else if(byte == '\r')
                 {
-                    out << '\\' << 'r';
+                    out << backslashch << 'r';
                 }
                 else if(byte == '\t')
                 {
-                    out << '\\' << 't';
+                    out << backslashch << 't';
                 }
                 else if(byte == '\f')
                 {
-                    out << '\\' << 'f';
+                    out << backslashch << 'f';
                 }
                 else if(byte == '\013')
                 {
-                    out << '\\' << 'v';
+                    out << backslashch << 'v';
                 }
                 else if(byte == '\010')
                 {
-                    out << '\\' << 'b';
+                    out << backslashch << 'b';
                 }
                 else if(byte == '\007')
                 {
-                    out << '\\' << 'a';
+                    out << backslashch << 'a';
                 }
                 else if(byte == '\033')
                 {
-                    out << '\\' << 'e';
+                    out << backslashch << 'e';
                 }
                 else if(std::isprint(byte) || (byte == ' '))
                 {
@@ -56,26 +81,7 @@ namespace Bits
                 }
                 else
                 {
-                    if(byte == 0)
-                    {
-                        out << '\\' << '0';
-                    }
-                    else
-                    {
-                        /*
-                        * emit hexadecimal escape representation.
-                        * i.e., byte of value 1 is \x01, etc
-                        */
-                        out
-                            << '\\'
-                            << 'x'
-                            << std::setfill('0')
-                            << std::setw(2)
-                            << std::uppercase
-                            << std::hex
-                            << byte
-                        ;
-                    }
+                    ByteToHex(out, byte, backslashch);
                 }
                 return out;
             }

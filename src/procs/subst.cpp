@@ -41,20 +41,18 @@ namespace Bits
                 int findfirst;
                 int padchar;
                 size_t it;
-                size_t ti;
                 size_t replen;
                 size_t findlen;
                 size_t remainder;
-                bool emptyrep;
                 bool emptypad;
                 bool wasfailure;
                 std::vector<int> cache;
                 cur = 0;
+                padchar = 0;
                 wasfailure = false;
                 findfirst = m_findme[0];
                 replen = m_replace.size();
                 findlen = m_findme.size();
-                emptyrep = (replen == 0);
                 emptypad = (m_padstr.size() == 0);
                 if(emptypad == false)
                 {
@@ -62,7 +60,6 @@ namespace Bits
                 }
                 while(true)
                 {
-                    again:
                     if((cur = inp.get()) == EOF)
                     {
                         return;

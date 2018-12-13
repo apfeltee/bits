@@ -118,23 +118,23 @@ namespace Bits
         static ContextPtr fninit(Util::CmdParser& prs, const ArgList& args)
         {
             auto html = new HtmlProc;
-            prs.on("-e", "--escape", "escape bits as HTML", [&]
+            prs.on({"-e", "--escape"}, "escape bits as HTML", [&]
             {
                 html->action = HtmlProc::Action::Escape;
             });
-            prs.on("-d", "--unescape", "unescape HTML entities", [&]
+            prs.on({"-d", "--unescape"}, "unescape HTML entities", [&]
             {
                 html->action = HtmlProc::Action::Unescape;
             });
-            prs.on("-n", "--newline", "add newline after processing to '&linefeed;'", [&]
+            prs.on({"-n", "--newline"}, "add newline after processing to '&linefeed;'", [&]
             {
                 html->opt_addnewline = true;
             });
-            prs.on("-a", "--ancient", "disable named entities (for ancient browsers and/or HTML processors)", [&]
+            prs.on({"-a", "--ancient"}, "disable named entities (for ancient browsers and/or HTML processors)", [&]
             {
                 html->opt_ancient = true;
             });
-            prs.on("-p", "--wrappre", "wrap output in <pre></pre> (escape only)", [&]
+            prs.on({"-p", "--wrappre"}, "wrap output in <pre></pre> (escape only)", [&]
             {
                 html->opt_wrappre = true;
             });

@@ -2,6 +2,28 @@
 #include "private.h"
 
 /*
+* !!! note !!!
+* these are deliberately global, because they're used by the input stream!
+*/
+#if !defined(BITS_INFILEBUF_SIZE)
+    #define BITS_INFILEBUF_SIZE (1024*32)
+#endif
+char g_infilebuffer[BITS_INFILEBUF_SIZE + 1];
+
+template<typename CharT>
+static void insetbuf(std::basic_istream<CharT>* fh)
+{
+    fh->rdbuf()->pubsetbuf(g_infilebuffer, BITS_INFILEBUF_SIZE);
+}
+
+template<typename CharT>
+static void insetbuf(std::basic_ostream<CharT>* fh)
+{
+    // do nothing for output streams
+    (void)fh;
+}
+
+/*
 * set (or rather, unset) some sensible basics.
 * specifically: unset the internal buffer of cout and cin,
 * and force both to use the default locale.
@@ -13,6 +35,7 @@ static void prepare_io()
     std::cin.rdbuf()->pubsetbuf(0, 0);
     std::cout.imbue(std::locale());
     std::cin.imbue(std::locale());
+    std::cin.tie(nullptr);
 }
 
 /*
@@ -126,6 +149,7 @@ template<typename StreamT>
 static StreamT* open_file(const std::string& path, std::ios_base::openmode omode)
 {
     auto fh = new StreamT;
+    insetbuf(fh);
     fh->open(path, omode);
     if(fh->good() && fh->is_open())
     {
@@ -172,12 +196,14 @@ static int do_proc(const std::string& procname, const Bits::ArgList& rest, std::
                 return 1;
             }
             inp = tmpinp;
+            insetbuf(inp);
             ret = info->main(inp, outp);
             delete tmpinp;
         }
     }
     else
     {
+        insetbuf(inp);
         ret = info->main(inp, outp);
     }
     delete info;
