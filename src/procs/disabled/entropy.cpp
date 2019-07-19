@@ -72,7 +72,7 @@ namespace Bits
                 return Util::String::EscapeString(str, addslashes);
             }
 
-            void collect(std::istream& inp)
+            void collect(InStream& inp)
             {
                 int byte;
                 std::string word;
@@ -162,7 +162,7 @@ namespace Bits
             delete ctx;
         }
 
-        static int fnmain(std::istream& inp, std::ostream& outp, ContextPtr ptr)
+        static int fnmain(InStream& inp, std::ostream& outp, ContextPtr ptr)
         {
             auto ctx = (EntropyCounter*)ptr;
             ctx->collect(inp);

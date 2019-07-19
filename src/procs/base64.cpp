@@ -14,7 +14,7 @@ namespace Bits
         class Encoder
         {
             public:
-                void encode_loop(std::istream& inp, std::ostream& outp)
+                void encode_loop(InStream& inp, std::ostream& outp)
                 {
                     int c0;
                     int c1;
@@ -70,7 +70,7 @@ namespace Bits
             delete ctx;
         }
 
-        static int fnmain(std::istream& inp, std::ostream& outp, ContextPtr ptr)
+        static int fnmain(InStream& inp, std::ostream& outp, ContextPtr ptr)
         {
             auto ctx = (Base64Encode::Encoder*)ptr;
             ctx->encode_loop(inp, outp);

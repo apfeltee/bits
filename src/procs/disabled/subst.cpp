@@ -35,7 +35,7 @@ namespace Bits
                 out.write(&chtmp, 1);
             }
 
-            void substMain(std::istream& inp, std::ostream& out)
+            void substMain(InStream& inp, std::ostream& out)
             {
                 int cur;
                 int findfirst;
@@ -175,7 +175,7 @@ namespace Bits
             delete ctx;
         }
 
-        static int fnmain(std::istream& inp, std::ostream& outp, ContextPtr ptr)
+        static int fnmain(InStream& inp, std::ostream& outp, ContextPtr ptr)
         {
             auto ctx = (SubstText*)ptr;
             ctx->substMain(inp, outp);

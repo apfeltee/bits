@@ -29,7 +29,7 @@ namespace Bits
             }
 
 
-            void process(std::istream& inp)
+            void process(InStream& inp)
             {
                 int current;
                 int next;
@@ -93,7 +93,7 @@ namespace Bits
             delete ctx;
         }
 
-        static int fnmain(std::istream& inp, std::ostream& outp, ContextPtr ptr)
+        static int fnmain(InStream& inp, std::ostream& outp, ContextPtr ptr)
         {
             auto ctx = (BeanCounter*)ptr;
             ctx->process(inp);

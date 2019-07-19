@@ -89,16 +89,15 @@ namespace Bits
             return -1;
         }
 
-        std::string codepoint_to_esc(const std::vector<int>& bytevec, char cfg_escch)
+        std::string codepoint_to_esc(const std::vector<int>& bytevec, char backslashch)
         {
             int cp;
             int rtlen;
             char buf[50];
             cp = codepoint(bytevec);
-            rtlen = sprintf(buf, "%cu{%x}", cfg_escch,  cp);
+            rtlen = sprintf(buf, "%cu{%x}", backslashch,  cp);
             return std::string(buf, rtlen);
         }
-
 
     }
 
@@ -106,89 +105,30 @@ namespace Bits
     {
         struct DumpState
         {
-            char cfg_escch        = '\\';
-            bool cfg_addnewline   = true;
+            char backslashch      = '\\';
+            bool newline_after_nl = true;
             bool sillymac         = false;
-            bool cfg_addslashes   = false;
-            bool cfg_hexonly      = false;
-            bool cfg_usecarets    = false;
+            bool addslashes       = false;
+            bool hexonly          = false;
+            bool usecarets        = false;
             // FIXME: should be set to false by default
-            bool cfg_depunicode   = false;
+            bool deparseunicode   = false;
 
-            /** see https://en.wikipedia.org/wiki/Caret_notation#Description */
-            bool CanBeCareted(int b)
-            {
-                return
-                (
-                    ((b >= 0) && (b <= 62)) ||
-                    ((b >= 96) && (b <= 126))
-                );
-            }
-
-            void PrnCaret(std::ostream& out, int bval)
-            {
-                if(bval >= 32)
-                {
-                    if(bval < 127)
-                    {
-                        out << char(bval);
-                    }
-                    else if(bval == 127)
-                    {
-                        out << "^?"; 
-                    }
-                    else
-                    {
-                        out << "M-";
-                        if(bval >= 160)
-                        {
-                            if(bval < 255)
-                            {
-                                out << char(bval ^ 0200);
-                            }
-                            else
-                            {
-                                out << "^?";
-                            }
-                        }
-                        else
-                        {
-                            out << '^' << char((bval - 0200) + 0100);
-                        }
-                    }
-                }
-                else
-                {
-                    if(Util::String::IsSpaceOrPrintable(bval) || (bval == '\n'))
-                    {
-                        out << char(bval);
-                    }
-                    else
-                    {
-                        out << '^' << char(bval ^ 0100);
-                    }
-                }
-            }
-
-            void dump(std::ostream& out, InStream& inp, int byte)
+            void dump(std::ostream& out, std::istream& inp, int byte)
             {
                 int pk;
                 int nbyt;
                 int icount;
                 std::vector<int> bytevec;
                 // -x overrides (most) other options, obviously
-                if(cfg_hexonly)
+                if(hexonly == true)
                 {
-                    Util::String::ByteToHex(out, byte, cfg_escch);
-                }
-                else if(cfg_usecarets)
-                {
-                    PrnCaret(out, byte);
+                    Util::String::ByteToHex(out, byte, backslashch);
                 }
                 else
                 {
                     // unicode codepoint ... starting .. point something-something?
-                    if(cfg_depunicode && HackyGuts::maybe_codepoint(byte))
+                    if((deparseunicode == true) && HackyGuts::maybe_codepoint(byte))
                     {
                         icount = 0;
                         bytevec.push_back(byte);
@@ -198,7 +138,7 @@ namespace Bits
                         {
                             pk = inp.peek();
                             /* chosen by fair round of hope-for-the-best */
-                            if((pk > 127) && HackyGuts::maybe_codepoint(pk))
+                            if((pk > 127) && (HackyGuts::maybe_codepoint(pk) == false))
                             {
                                 nbyt = inp.get();
                                 //std::cerr << "pushing byte " << int(nbyt) << std::endl;
@@ -217,18 +157,18 @@ namespace Bits
                         //   + dump bytes as-is (pessimistic)
                         if(bytevec.size() > 1)
                         {
-                            out << HackyGuts::codepoint_to_esc(bytevec, cfg_escch);
+                            out << HackyGuts::codepoint_to_esc(bytevec, backslashch);
                             return;
                         }
                     }
                     else
                     {
-                        Util::String::EscapeByte(out, byte, cfg_addslashes, cfg_escch);
+                        Util::String::EscapeByte(out, byte, addslashes, backslashch);
                     }
                 }
                 if(byte == '\n')
                 {
-                    if(cfg_addnewline)
+                    if(newline_after_nl)
                     {
                         out << '\n';
                     }
@@ -246,38 +186,33 @@ namespace Bits
             ds = new DumpState;
             prs.on({"-n", "--nonewline"}, "disable printing a newline after \\n", [&]
             {
-                ds->cfg_addnewline = false;
+                ds->newline_after_nl = false;
             });
             prs.on({"-q", "--addquotes"}, "add slashes to double quotes (i.e., \"foo\" becomes \\\"foo\\\")", [&]
             {
-                ds->cfg_addslashes = true;
+                ds->addslashes = true;
             });
             prs.on({"-u", "--nounicode"}, "enable deparsing unicode codepoints", [&]
             {
-                ds->cfg_depunicode = true;
+                ds->deparseunicode = true;
             });
-            prs.on({"-x", "--cfg_hexonly"}, "output hexadecimal escapes only (overturns -u and -q)", [&]
+            prs.on({"-x", "--hexonly"}, "output hexadecimal escapes only (overturns -u and -q)", [&]
             {
-                ds->cfg_hexonly = true;
+                ds->hexonly = true;
             });
             prs.on({"-b?", "--escapechar=?"}, "specify escape character (default is backslash '\\')", [&](const OptionParser::Value& v)
             {
-                ds->cfg_escch = v.str()[0];
+                ds->backslashch = v.str()[0];
             });
             prs.on({"-m", "--mac"}, "assume input file(s) are Mac-style CR, instead of LF", [&]
             {
                 ds->sillymac = true;
             });
-            prs.on({"-c", "--caret"}, "use caret and 'M-' notation", [&]
+            prs.on({"-c", "--caret"}, "use caret notation ('^M' for '\\r', as used by, e.g., GNU less)", [&]
             {
-                ds->cfg_usecarets = true;
+                ds->usecarets = true;
             });
             prs.parse(args);
-            /** NB. these two do not mix! */
-            if(ds->cfg_usecarets)
-            {
-                ds->cfg_addnewline = false;
-            }
             return ds;
         }
 
@@ -286,7 +221,7 @@ namespace Bits
             delete static_cast<DumpState*>(ptr);
         }
 
-        static int fnmain(InStream& inp, std::ostream& outp, ContextPtr ptr)
+        static int fnmain(std::istream& inp, std::ostream& outp, ContextPtr ptr)
         {
             int byte;
             DumpState* ds;
@@ -295,7 +230,6 @@ namespace Bits
             {
                 ds->dump(outp, inp, byte & 0xff);
             }
-            //std::cerr << "inp.get() returned EOF?" << std::endl;
             return 0;
         }
 

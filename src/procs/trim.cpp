@@ -104,7 +104,7 @@ namespace Bits
             delete tr;
         }
 
-        static int fnmain(std::istream& inp, std::ostream& outp, ContextPtr ptr)
+        static int fnmain(InStream& inp, std::ostream& outp, ContextPtr ptr)
         {
             int byte;
             TrimState* tr;

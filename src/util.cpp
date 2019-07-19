@@ -33,6 +33,8 @@ namespace Bits
                 return out;
             }
 
+
+
             std::ostream& EscapeByte(std::ostream& out, int byte, bool addslashes, char backslashch)
             {
                 if((byte == '"') && addslashes)
@@ -75,7 +77,7 @@ namespace Bits
                 {
                     out << backslashch << 'e';
                 }
-                else if(std::isprint(byte) || (byte == ' '))
+                else if(IsSpaceOrPrintable(byte))
                 {
                     out << char(byte);
                 }
@@ -101,6 +103,33 @@ namespace Bits
                     EscapeByte(strm, ch, addslashes);
                 }
                 return strm.str();
+            }
+
+            /** NB. std::isspace() will include \v, \f, \r, etc, which we don't need here */
+            bool IsSpaceOrPrintable(int byte)
+            {
+                return (
+                    std::isprint(byte) || (
+                        (
+                            (byte == ' ') ||
+                            (byte == '\t')
+                        )
+                        //std::isspace(byte)
+                        
+                    )
+                );
+            }
+
+            bool IsSpaceOrPrintable(const std::string& str)
+            {
+                for(int byte: str)
+                {
+                    if(!IsSpaceOrPrintable(byte))
+                    {
+                        return false;
+                    }
+                }
+                return true;
             }
         }
     }

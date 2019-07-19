@@ -197,14 +197,18 @@ static int do_proc(const std::string& procname, const Bits::ArgList& rest, std::
             }
             inp = tmpinp;
             insetbuf(inp);
-            ret = info->main(inp, outp);
+            Bits::InStream ins(inp);
+            //auto ins = new Bits::InStream(inp);
+            ret = info->main(ins, outp);
             delete tmpinp;
         }
     }
     else
     {
         insetbuf(inp);
-        ret = info->main(inp, outp);
+        Bits::InStream ins(inp);
+        //auto ins = new Bits::InStream(inp);
+        ret = info->main(ins, outp);
     }
     delete info;
     return ret;

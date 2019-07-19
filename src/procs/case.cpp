@@ -84,9 +84,9 @@ namespace Bits
             delete (ChangeCase*)ptr;
         }
 
-        static int fnmain(std::istream& inp, std::ostream& outp, ContextPtr ptr)
+        static int fnmain(InStream& inp, std::ostream& outp, ContextPtr ptr)
         {
-            char ch;
+            int ch;
             auto chcase = (ChangeCase*)ptr;
             while(inp.get(ch))
             {

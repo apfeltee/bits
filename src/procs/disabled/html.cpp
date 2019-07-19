@@ -42,7 +42,7 @@ namespace Bits
             return rtval;
         }
 
-        bool get_htmlentity(char ch, std::string& dest)
+        bool get_htmlentity(int ch, std::string& dest)
         {
             if(!opt_ancient)
             {
@@ -66,9 +66,9 @@ namespace Bits
             action = Action::Escape;
         }
 
-        void escape_html(std::ostream& outp, std::istream& inp)
+        void escape_html(std::ostream& outp, InStream& inp)
         {
-            char ch;
+            int ch;
             std::string tmp;
             if(opt_wrappre)
             {
@@ -99,7 +99,7 @@ namespace Bits
         }
         */
 
-        void iterate(std::ostream& outp, std::istream& inp)
+        void iterate(std::ostream& outp, InStream& inp)
         {
             if(action == Action::Escape)
             {
@@ -147,7 +147,7 @@ namespace Bits
             delete (HtmlProc*)ptr;
         }
 
-        static int fnmain(std::istream& inp, std::ostream& outp, ContextPtr ptr)
+        static int fnmain(InStream& inp, std::ostream& outp, ContextPtr ptr)
         {
             auto html = (HtmlProc*)ptr;
             html->iterate(outp, inp);

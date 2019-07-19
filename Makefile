@@ -39,6 +39,8 @@ $(headers): $(generated_src)
 $(exename): $(sources) $(headers) $(objects) $(generated_src)
 	$(CXX) $(objects) -o $(exename) $(LFLAGS)
 
+$(objects): $(sources) $(headers)
+
 $(generated_ent): $(ent_jsonsrc)
 	ruby gen_entities.rb < $(ent_jsonsrc) > $(generated_ent)
 

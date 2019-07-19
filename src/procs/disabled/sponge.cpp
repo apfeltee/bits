@@ -37,7 +37,7 @@ namespace Bits
             delete sp;
         }
 
-        static int fnmain(std::istream& inp, std::ostream& outp, ContextPtr ptr)
+        static int fnmain(InStream& inp, std::ostream& outp, ContextPtr ptr)
         {
             int ch;
             std::string obuf;
