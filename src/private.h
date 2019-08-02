@@ -15,7 +15,6 @@
 #include <cstring>
 #include <cctype>
 
-
 // 3rdparty header(s)
 #include "optionparser.hpp"
 

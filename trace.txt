@@ -1,0 +1,18 @@
+Makefile:81: update target 'src/util.o' due to: src/util.cpp src/procs/pseudo.cpp src/procs/rot13.cpp src/procs/dump.cpp src/procs/trim.cpp src/procs/case.cpp src/procs/base64.cpp src/main.cpp src/private.h
+g++ -std=c++17 -Wall -Wextra -c src/util.cpp -o src/util.o -Isrc -I../optionparser/include -O3
+Makefile:81: update target 'src/procs/pseudo.o' due to: src/procs/pseudo.cpp src/util.cpp src/procs/rot13.cpp src/procs/dump.cpp src/procs/trim.cpp src/procs/case.cpp src/procs/base64.cpp src/main.cpp src/private.h
+g++ -std=c++17 -Wall -Wextra -c src/procs/pseudo.cpp -o src/procs/pseudo.o -Isrc -I../optionparser/include -O3
+Makefile:81: update target 'src/procs/rot13.o' due to: src/procs/rot13.cpp src/util.cpp src/procs/pseudo.cpp src/procs/dump.cpp src/procs/trim.cpp src/procs/case.cpp src/procs/base64.cpp src/main.cpp src/private.h
+g++ -std=c++17 -Wall -Wextra -c src/procs/rot13.cpp -o src/procs/rot13.o -Isrc -I../optionparser/include -O3
+Makefile:81: update target 'src/procs/dump.o' due to: src/procs/dump.cpp src/util.cpp src/procs/pseudo.cpp src/procs/rot13.cpp src/procs/trim.cpp src/procs/case.cpp src/procs/base64.cpp src/main.cpp src/private.h
+g++ -std=c++17 -Wall -Wextra -c src/procs/dump.cpp -o src/procs/dump.o -Isrc -I../optionparser/include -O3
+Makefile:81: update target 'src/procs/trim.o' due to: src/procs/trim.cpp src/util.cpp src/procs/pseudo.cpp src/procs/rot13.cpp src/procs/dump.cpp src/procs/case.cpp src/procs/base64.cpp src/main.cpp src/private.h
+g++ -std=c++17 -Wall -Wextra -c src/procs/trim.cpp -o src/procs/trim.o -Isrc -I../optionparser/include -O3
+Makefile:81: update target 'src/procs/case.o' due to: src/procs/case.cpp src/util.cpp src/procs/pseudo.cpp src/procs/rot13.cpp src/procs/dump.cpp src/procs/trim.cpp src/procs/base64.cpp src/main.cpp src/private.h
+g++ -std=c++17 -Wall -Wextra -c src/procs/case.cpp -o src/procs/case.o -Isrc -I../optionparser/include -O3
+Makefile:81: update target 'src/procs/base64.o' due to: src/procs/base64.cpp src/util.cpp src/procs/pseudo.cpp src/procs/rot13.cpp src/procs/dump.cpp src/procs/trim.cpp src/procs/case.cpp src/main.cpp src/private.h
+g++ -std=c++17 -Wall -Wextra -c src/procs/base64.cpp -o src/procs/base64.o -Isrc -I../optionparser/include -O3
+Makefile:81: update target 'src/main.o' due to: src/main.cpp src/util.cpp src/procs/pseudo.cpp src/procs/rot13.cpp src/procs/dump.cpp src/procs/trim.cpp src/procs/case.cpp src/procs/base64.cpp src/private.h
+g++ -std=c++17 -Wall -Wextra -c src/main.cpp -o src/main.o -Isrc -I../optionparser/include -O3
+Makefile:40: update target 'bits.exe' due to: src/util.cpp src/procs/pseudo.cpp src/procs/rot13.cpp src/procs/dump.cpp src/procs/trim.cpp src/procs/case.cpp src/procs/base64.cpp src/main.cpp src/private.h src/util.o src/procs/pseudo.o src/procs/rot13.o src/procs/dump.o src/procs/trim.o src/procs/case.o src/procs/base64.o src/main.o src/generated/entities.h src/generated/pseudoalphabets.h
+g++ -std=c++17 -Wall -Wextra src/util.o src/procs/pseudo.o src/procs/rot13.o src/procs/dump.o src/procs/trim.o src/procs/case.o src/procs/base64.o src/main.o -o bits.exe -O3

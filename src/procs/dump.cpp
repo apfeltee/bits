@@ -106,14 +106,16 @@ namespace Bits
     {
         struct DumpState
         {
-            char cfg_escch        = '\\';
-            bool cfg_addnewline   = true;
-            bool sillymac         = false;
-            bool cfg_addslashes   = false;
-            bool cfg_hexonly      = false;
-            bool cfg_usecarets    = false;
+            char cfg_escch          = '\\';
+            bool cfg_addnewline     = true;
+            bool sillymac           = false;
+            bool cfg_addslashes     = false;
+            bool cfg_hexonly        = false;
+            bool cfg_usecarets      = false;
             // FIXME: should be set to false by default
-            bool cfg_depunicode   = false;
+            bool cfg_depunicode     = false;
+            bool cfg_skipnonprint   = false;
+            bool cfg_skipemptylines = false;
 
             /** see https://en.wikipedia.org/wiki/Caret_notation#Description */
             bool CanBeCareted(int b)
@@ -129,31 +131,34 @@ namespace Bits
             {
                 if(bval >= 32)
                 {
-                    if(bval < 127)
+                    if(cfg_skipnonprint == false)
                     {
-                        out << char(bval);
-                    }
-                    else if(bval == 127)
-                    {
-                        out << "^?"; 
-                    }
-                    else
-                    {
-                        out << "M-";
-                        if(bval >= 160)
+                        if(bval < 127)
                         {
-                            if(bval < 255)
-                            {
-                                out << char(bval ^ 0200);
-                            }
-                            else
-                            {
-                                out << "^?";
-                            }
+                            out << char(bval);
+                        }
+                        else if(bval == 127)
+                        {
+                            out << "^?"; 
                         }
                         else
                         {
-                            out << '^' << char((bval - 0200) + 0100);
+                            out << "M-";
+                            if(bval >= 160)
+                            {
+                                if(bval < 255)
+                                {
+                                    out << char(bval ^ 0200);
+                                }
+                                else
+                                {
+                                    out << "^?";
+                                }
+                            }
+                            else
+                            {
+                                out << '^' << char((bval - 0200) + 0100);
+                            }
                         }
                     }
                 }
@@ -161,11 +166,18 @@ namespace Bits
                 {
                     if(Util::String::IsSpaceOrPrintable(bval) || (bval == '\n'))
                     {
+                        if((bval == '\n') && cfg_skipemptylines)
+                        {
+                            return;
+                        }
                         out << char(bval);
                     }
                     else
                     {
-                        out << '^' << char(bval ^ 0100);
+                        //if(!cfg_skipnonprint)
+                        {
+                            out << '^' << char(bval ^ 0100);
+                        }
                     }
                 }
             }
@@ -223,6 +235,16 @@ namespace Bits
                     }
                     else
                     {
+                        bool ispr = (
+                            Util::String::IsSpaceOrPrintable(byte) || (byte == '\n')
+                        );
+                        if((ispr == false) && cfg_skipnonprint)
+                        {
+                            if((byte == '\n') && cfg_skipemptylines)
+                            {
+                                return;
+                            }
+                        }
                         Util::String::EscapeByte(out, byte, cfg_addslashes, cfg_escch);
                     }
                 }
@@ -256,7 +278,7 @@ namespace Bits
             {
                 ds->cfg_depunicode = true;
             });
-            prs.on({"-x", "--cfg_hexonly"}, "output hexadecimal escapes only (overturns -u and -q)", [&]
+            prs.on({"-x", "--hexonly"}, "output hexadecimal escapes only (overturns -u and -q)", [&]
             {
                 ds->cfg_hexonly = true;
             });
@@ -271,6 +293,14 @@ namespace Bits
             prs.on({"-c", "--caret"}, "use caret and 'M-' notation", [&]
             {
                 ds->cfg_usecarets = true;
+            });
+            prs.on({"-s", "--skipnp"}, "skip non-printable characters", [&]
+            {
+                ds->cfg_skipnonprint = true;
+            });
+            prs.on({"-e", "--skipempty"}, "skip empty lines (probably only useful in combi with '-s')", [&]
+            {
+                ds->cfg_skipemptylines = true;
             });
             prs.parse(args);
             /** NB. these two do not mix! */
@@ -295,10 +325,8 @@ namespace Bits
             {
                 ds->dump(outp, inp, byte & 0xff);
             }
-            //std::cerr << "inp.get() returned EOF?" << std::endl;
             return 0;
         }
-
 
         ProcInfo* fn_info_dump()
         {

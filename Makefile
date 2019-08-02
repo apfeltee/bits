@@ -31,15 +31,17 @@ sources          = $(sources_lib) $(sources_exe)
 
 ##########################
 
-all: $(generated_src) $(exename)
+.PHONY: all
 
-$(sources): $(generated_src)
-$(headers): $(generated_src)
+all: $(exename)
 
-$(exename): $(sources) $(headers) $(objects) $(generated_src)
+#$(exename): $(sources) $(headers) $(objects) $(generated_src)
+$(exename): $(headers) $(generated_src) $(objects)
 	$(CXX) $(objects) -o $(exename) $(LFLAGS)
 
-$(objects): $(sources) $(headers)
+#$(sources): $(generated_src) $(headers)
+
+#$(objects): $(sources) 
 
 $(generated_ent): $(ent_jsonsrc)
 	ruby gen_entities.rb < $(ent_jsonsrc) > $(generated_ent)
@@ -49,6 +51,9 @@ $(generated_pseudo): $(pseudo_jsonsrc)
 
 $(ent_jsonsrc):
 #	wget $(ent_urlsrc) -O $(ent_jsonsrc)
+
+%.o: %.cpp $(headers)
+	$(CXX) -c $< -o $@ $(CFLAGS)
 
 help:
 	@echo "available targets:"
@@ -77,6 +82,4 @@ springclean: distclean
 rebuild: distclean all
 springrebuild: springclean all
 
-%.o: %.cpp
-	$(CXX) -c $< -o $@ $(CFLAGS)
 

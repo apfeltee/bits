@@ -11,7 +11,7 @@ namespace PseudoAlphabet
         const char* unicodeescape;
         const char* htmlentity;
         #if 0
-        std::array<int, 5> codepoints = {};
+        std::array<int, 5> codepoints;
         #else
         std::vector<int> codepoints;
         #endif
