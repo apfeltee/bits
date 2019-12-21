@@ -14,6 +14,49 @@ namespace Bits
             Unescape
         };
 
+        struct Unescaper
+        {
+            std::ostream& outp;
+            InStream& inp;
+            char currch = EOF;
+            char nextch = EOF;
+            char prevch = EOF;
+
+            Unescaper(std::ostream& routp, InStream& rinp): outp(routp), inp(rinp)
+            {
+            }
+
+            bool more()
+            {
+                prevch = currch;
+                if(inp.get(currch))
+                {
+                    if(!inp.get(nextch))
+                    {
+                        nextch = EOF;
+                    }
+                    return true;
+                }
+                return false;
+            }
+
+            void run()
+            {
+#if 0
+                int ch;
+                std::string entbuf;
+                while(true)
+                {
+                    more();
+                    if(currch == '&')
+                    {
+                        if((nextch == '#') || )
+                    }
+                }
+#endif
+            }
+        };
+
         Action action;
         bool opt_addnewline = false;
         bool opt_ancient = false;
@@ -92,12 +135,13 @@ namespace Bits
             }
         }
 
-        /*
-        void unescape_html(std::ostream& outp, std::istream& inp)
+        
+        void unescape_html(std::ostream& outp, InStream& inp)
         {
-            
+            Unescaper unes(outp, inp);
+            unes.run();
         }
-        */
+        
 
         void iterate(std::ostream& outp, InStream& inp)
         {
@@ -107,7 +151,7 @@ namespace Bits
             }
             else if(action == Action::Unescape)
             {
-                //return unescape_html(outp, inp);
+                return unescape_html(outp, inp);
             }
             std::cerr << "unimplemented" << std::endl;
         }

@@ -6,12 +6,10 @@ namespace Bits
 {
     class GenPseudo
     {
-        private:
+        public:
             PseudoAlphabet::Alphabet m_alphabet;
             std::string m_alphname;
             bool m_alphdefined = false;
-
-        public:
             bool want_unicode = true;
 
         public:
@@ -25,14 +23,16 @@ namespace Bits
 
             bool loadAlphabet(const std::string& name)
             {
-                auto it = PseudoAlphabet::All.find(name);
-                if(it == PseudoAlphabet::All.end())
+                for(auto it=PseudoAlphabet::All.begin(); it!=PseudoAlphabet::All.end(); it++)
                 {
-                    return false;
+                    if((it->first == name) || it->second.hasAlias(name))
+                    {
+                        m_alphabet = it->second;
+                        m_alphdefined = true;
+                        return true;
+                    }
                 }
-                m_alphabet = it->second;
-                m_alphdefined = true;
-                return true;
+                return false;
             }
 
             void writeRune(int ch, std::ostream& out, bool ovunicode) const
@@ -41,8 +41,9 @@ namespace Bits
                 int byteval;
                 int asciicode;
                 bool wroterune;
+                const auto& items = m_alphabet.items;
                 wroterune = false;
-                for(auto it=m_alphabet.begin(); it!=m_alphabet.end(); it++)
+                for(auto it=items.begin(); it!=items.end(); it++)
                 {
                     asciicode = it->asciicode;
                     if(ch == asciicode)
@@ -51,11 +52,9 @@ namespace Bits
                         {
                             /*
                             * this will almost definitely not work for more complex
-                            * pseudo alphabets. no idea why.
+                            * pseudo alphabets. no idea why. unicode is soo much fun.
                             */
-                            //out << it->unicodeescape;
                             for(ari=0; ari<it->codepoints.size(); ari++)
-                            //for(auto byteval: it->codepoints)
                             {
                                 byteval = it->codepoints[ari];
                                 if(byteval == 0)
@@ -104,8 +103,18 @@ namespace Bits
         {
             alphname = it->first;
             pseudo.loadAlphabet(alphname);
+            const auto& aliases = pseudo.m_alphabet.aliases;
             std::cout << "  - " << std::setw(20) << alphname << ": ";
             pseudo.writeRuneString(sampletext, std::cout);
+            if(aliases.size() > 0)
+            {
+                std::cout << " (aliases: ";
+                for(auto alit=aliases.begin(); alit!=aliases.end(); alit++)
+                {
+                    std::cout << *alit << " ";
+                }
+                std::cout << ")";
+            }
             std::cout << std::endl;
         }
     }

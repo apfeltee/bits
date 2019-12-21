@@ -7,22 +7,51 @@ namespace PseudoAlphabet
 {
     struct Item
     {
+        using CPList = 
+        #if 0
+          std::array<int, 5>
+        #else
+          std::vector<int>
+        #endif
+        ;
         int asciicode;
         const char* unicodeescape;
         const char* htmlentity;
-        #if 0
-        std::array<int, 5> codepoints;
-        #else
-        std::vector<int> codepoints;
-        #endif
+        CPList codepoints;
+    };
+
+    struct Alphabet
+    {
+        using AliasList = std::vector<std::string>;
+        using ItemList  = std::vector<Item>;
+        AliasList aliases;
+        ItemList items;
+
+        Alphabet()
+        {
+        }
+
+        Alphabet(AliasList&& als, ItemList&& itms): aliases(als), items(itms)
+        {
+        }
+
+        bool hasAlias(const std::string& als) const
+        {
+            if(std::find(aliases.begin(), aliases.end(), als) == aliases.end())
+            {
+                return false;
+            }
+            return true;
+        }
     };
   
-    using Alphabet = std::vector<Item>;
+    //using Alphabet = std::vector<Item>;
+
     using Mapping = std::map<std::string, Alphabet>;
 
     static Mapping All =
     {
-        {"circled", {
+        {"circled", Alphabet{Alphabet::AliasList{}, Alphabet::ItemList{
             {97, "\xE2\x93\x90", "&#x24D0;", {226,147,144}},
             {98, "\xE2\x93\x91", "&#x24D1;", {226,147,145}},
             {99, "\xE2\x93\x92", "&#x24D2;", {226,147,146}},
@@ -97,8 +126,8 @@ namespace PseudoAlphabet
             {46, "\xE2\xA8\x80", "&#x2A00;", {226,168,128}},
             {58, "\x3A", "&#x3A;", {58}},
             {95, "\x5F", "&#x5F;", {95}},
-        }},
-        {"circledneg", {
+        }}},
+        {"circledneg", Alphabet{Alphabet::AliasList{}, Alphabet::ItemList{
             {97, "\xE1\xBC\x95\x30", "&#x1F150;", {240,159,133,144}},
             {98, "\xE1\xBC\x95\x31", "&#x1F151;", {240,159,133,145}},
             {99, "\xE1\xBC\x95\x32", "&#x1F152;", {240,159,133,146}},
@@ -173,8 +202,8 @@ namespace PseudoAlphabet
             {46, "\x2E", "&#x2E;", {46}},
             {58, "\x3A", "&#x3A;", {58}},
             {95, "\x5F", "&#x5F;", {95}},
-        }},
-        {"fullwidth", {
+        }}},
+        {"fullwidth", Alphabet{Alphabet::AliasList{"fw"}, Alphabet::ItemList{
             {97, "\xEF\xBD\x81", "&#xFF41;", {239,189,129}},
             {98, "\xEF\xBD\x82", "&#xFF42;", {239,189,130}},
             {99, "\xEF\xBD\x83", "&#xFF43;", {239,189,131}},
@@ -249,8 +278,8 @@ namespace PseudoAlphabet
             {46, "\xEF\xBC\x8E", "&#xFF0E;", {239,188,142}},
             {58, "\xEF\xBC\x9A", "&#xFF1A;", {239,188,154}},
             {95, "\xEF\xBC\xBF", "&#xFF3F;", {239,188,191}},
-        }},
-        {"mathbold", {
+        }}},
+        {"mathbold", Alphabet{Alphabet::AliasList{"bold"}, Alphabet::ItemList{
             {97, "\xE1\xB5\x81\x61", "&#x1D41A;", {240,157,144,154}},
             {98, "\xE1\xB5\x81\x62", "&#x1D41B;", {240,157,144,155}},
             {99, "\xE1\xB5\x81\x63", "&#x1D41C;", {240,157,144,156}},
@@ -325,8 +354,8 @@ namespace PseudoAlphabet
             {46, "\x2E", "&#x2E;", {46}},
             {58, "\x3A", "&#x3A;", {58}},
             {95, "\x5F", "&#x5F;", {95}},
-        }},
-        {"mathboldfraktur", {
+        }}},
+        {"mathboldfraktur", Alphabet{Alphabet::AliasList{"boldfraktur", "bfraktur"}, Alphabet::ItemList{
             {97, "\xE1\xB5\x98\x36", "&#x1D586;", {240,157,150,134}},
             {98, "\xE1\xB5\x98\x37", "&#x1D587;", {240,157,150,135}},
             {99, "\xE1\xB5\x98\x38", "&#x1D588;", {240,157,150,136}},
@@ -401,8 +430,8 @@ namespace PseudoAlphabet
             {46, "\x2E", "&#x2E;", {46}},
             {58, "\x3A", "&#x3A;", {58}},
             {95, "\x5F", "&#x5F;", {95}},
-        }},
-        {"mathbolditalic", {
+        }}},
+        {"mathbolditalic", Alphabet{Alphabet::AliasList{"bolditalic", "bitalic"}, Alphabet::ItemList{
             {97, "\xE1\xB5\x88\x32", "&#x1D482;", {240,157,146,130}},
             {98, "\xE1\xB5\x88\x33", "&#x1D483;", {240,157,146,131}},
             {99, "\xE1\xB5\x88\x34", "&#x1D484;", {240,157,146,132}},
@@ -477,8 +506,8 @@ namespace PseudoAlphabet
             {46, "\x2E", "&#x2E;", {46}},
             {58, "\x3A", "&#x3A;", {58}},
             {95, "\x5F", "&#x5F;", {95}},
-        }},
-        {"mathboldscript", {
+        }}},
+        {"mathboldscript", Alphabet{Alphabet::AliasList{"boldscript", "bscript"}, Alphabet::ItemList{
             {97, "\xE1\xB5\x8E\x61", "&#x1D4EA;", {240,157,147,170}},
             {98, "\xE1\xB5\x8E\x62", "&#x1D4EB;", {240,157,147,171}},
             {99, "\xE1\xB5\x8E\x63", "&#x1D4EC;", {240,157,147,172}},
@@ -553,8 +582,8 @@ namespace PseudoAlphabet
             {46, "\x2E", "&#x2E;", {46}},
             {58, "\x3A", "&#x3A;", {58}},
             {95, "\x5F", "&#x5F;", {95}},
-        }},
-        {"mathdoublestruck", {
+        }}},
+        {"mathdoublestruck", Alphabet{Alphabet::AliasList{"doublestruck", "dstruck"}, Alphabet::ItemList{
             {97, "\xE1\xB5\x95\x32", "&#x1D552;", {240,157,149,146}},
             {98, "\xE1\xB5\x95\x33", "&#x1D553;", {240,157,149,147}},
             {99, "\xE1\xB5\x95\x34", "&#x1D554;", {240,157,149,148}},
@@ -629,8 +658,8 @@ namespace PseudoAlphabet
             {46, "\x2E", "&#x2E;", {46}},
             {58, "\x3A", "&#x3A;", {58}},
             {95, "\x5F", "&#x5F;", {95}},
-        }},
-        {"mathmonospace", {
+        }}},
+        {"mathmonospace", Alphabet{Alphabet::AliasList{"monospace", "mono", "ms"}, Alphabet::ItemList{
             {97, "\xE1\xB5\xA8\x61", "&#x1D68A;", {240,157,154,138}},
             {98, "\xE1\xB5\xA8\x62", "&#x1D68B;", {240,157,154,139}},
             {99, "\xE1\xB5\xA8\x63", "&#x1D68C;", {240,157,154,140}},
@@ -705,8 +734,8 @@ namespace PseudoAlphabet
             {46, "\x2E", "&#x2E;", {46}},
             {58, "\x3A", "&#x3A;", {58}},
             {95, "\x5F", "&#x5F;", {95}},
-        }},
-        {"mathsans", {
+        }}},
+        {"mathsans", Alphabet{Alphabet::AliasList{"sans"}, Alphabet::ItemList{
             {97, "\xE1\xB5\x9B\x61", "&#x1D5BA;", {240,157,150,186}},
             {98, "\xE1\xB5\x9B\x62", "&#x1D5BB;", {240,157,150,187}},
             {99, "\xE1\xB5\x9B\x63", "&#x1D5BC;", {240,157,150,188}},
@@ -781,8 +810,8 @@ namespace PseudoAlphabet
             {46, "\x2E", "&#x2E;", {46}},
             {58, "\x3A", "&#x3A;", {58}},
             {95, "\x5F", "&#x5F;", {95}},
-        }},
-        {"mathsansbold", {
+        }}},
+        {"mathsansbold", Alphabet{Alphabet::AliasList{"bsans", "sansb"}, Alphabet::ItemList{
             {97, "\xE1\xB5\x9E\x65", "&#x1D5EE;", {240,157,151,174}},
             {98, "\xE1\xB5\x9E\x66", "&#x1D5EF;", {240,157,151,175}},
             {99, "\xE1\xB5\x9F\x30", "&#x1D5F0;", {240,157,151,176}},
@@ -857,8 +886,8 @@ namespace PseudoAlphabet
             {46, "\x2E", "&#x2E;", {46}},
             {58, "\x3A", "&#x3A;", {58}},
             {95, "\x5F", "&#x5F;", {95}},
-        }},
-        {"mathsansbolditalic", {
+        }}},
+        {"mathsansbolditalic", Alphabet{Alphabet::AliasList{"sansbolditalic", "sansbi", "bisans"}, Alphabet::ItemList{
             {97, "\xE1\xB5\xA5\x36", "&#x1D656;", {240,157,153,150}},
             {98, "\xE1\xB5\xA5\x37", "&#x1D657;", {240,157,153,151}},
             {99, "\xE1\xB5\xA5\x38", "&#x1D658;", {240,157,153,152}},
@@ -933,8 +962,8 @@ namespace PseudoAlphabet
             {46, "\x2E", "&#x2E;", {46}},
             {58, "\x3A", "&#x3A;", {58}},
             {95, "\x5F", "&#x5F;", {95}},
-        }},
-        {"mathsansitalic", {
+        }}},
+        {"mathsansitalic", Alphabet{Alphabet::AliasList{"sansitalic", "sansi", "isans"}, Alphabet::ItemList{
             {97, "\xE1\xB5\xA2\x32", "&#x1D622;", {240,157,152,162}},
             {98, "\xE1\xB5\xA2\x33", "&#x1D623;", {240,157,152,163}},
             {99, "\xE1\xB5\xA2\x34", "&#x1D624;", {240,157,152,164}},
@@ -1009,8 +1038,8 @@ namespace PseudoAlphabet
             {46, "\x2E", "&#x2E;", {46}},
             {58, "\x3A", "&#x3A;", {58}},
             {95, "\x5F", "&#x5F;", {95}},
-        }},
-        {"parenthesized", {
+        }}},
+        {"parenthesized", Alphabet{Alphabet::AliasList{}, Alphabet::ItemList{
             {97, "\xE2\x92\x9C", "&#x249C;", {226,146,156}},
             {98, "\xE2\x92\x9D", "&#x249D;", {226,146,157}},
             {99, "\xE2\x92\x9E", "&#x249E;", {226,146,158}},
@@ -1085,8 +1114,8 @@ namespace PseudoAlphabet
             {46, "\x2E", "&#x2E;", {46}},
             {58, "\x3A", "&#x3A;", {58}},
             {95, "\x5F", "&#x5F;", {95}},
-        }},
-        {"regionalindicator", {
+        }}},
+        {"regionalindicator", Alphabet{Alphabet::AliasList{}, Alphabet::ItemList{
             {97, "\xE1\xBC\x9E\x36", "&#x1F1E6;", {240,159,135,166}},
             {98, "\xE1\xBC\x9E\x37", "&#x1F1E7;", {240,159,135,167}},
             {99, "\xE1\xBC\x9E\x38", "&#x1F1E8;", {240,159,135,168}},
@@ -1161,8 +1190,8 @@ namespace PseudoAlphabet
             {46, "\x2E", "&#x2E;", {46}},
             {58, "\x3A", "&#x3A;", {58}},
             {95, "\x5F", "&#x5F;", {95}},
-        }},
-        {"squared", {
+        }}},
+        {"squared", Alphabet{Alphabet::AliasList{}, Alphabet::ItemList{
             {97, "\xE1\xBC\x93\x30", "&#x1F130;", {240,159,132,176}},
             {98, "\xE1\xBC\x93\x31", "&#x1F131;", {240,159,132,177}},
             {99, "\xE1\xBC\x93\x32", "&#x1F132;", {240,159,132,178}},
@@ -1237,8 +1266,8 @@ namespace PseudoAlphabet
             {46, "\xE2\x8A\xA1", "&#x22A1;", {226,138,161}},
             {58, "\x3A", "&#x3A;", {58}},
             {95, "\x5F", "&#x5F;", {95}},
-        }},
-        {"squaredneg", {
+        }}},
+        {"squaredneg", Alphabet{Alphabet::AliasList{}, Alphabet::ItemList{
             {97, "\xE1\xBC\x97\x30", "&#x1F170;", {240,159,133,176}},
             {98, "\xE1\xBC\x97\x31", "&#x1F171;", {240,159,133,177}},
             {99, "\xE1\xBC\x97\x32", "&#x1F172;", {240,159,133,178}},
@@ -1313,8 +1342,8 @@ namespace PseudoAlphabet
             {46, "\x2E", "&#x2E;", {46}},
             {58, "\x3A", "&#x3A;", {58}},
             {95, "\x5F", "&#x5F;", {95}},
-        }},
-        {"acute", {
+        }}},
+        {"acute", Alphabet{Alphabet::AliasList{}, Alphabet::ItemList{
             {97, "\xC3\xA1", "&#xE1;", {195,161}},
             {98, "\x62", "&#x62;", {98}},
             {99, "\xC4\x87", "&#x107;", {196,135}},
@@ -1389,8 +1418,8 @@ namespace PseudoAlphabet
             {46, "\x2E", "&#x2E;", {46}},
             {58, "\x3A", "&#x3A;", {58}},
             {95, "\x5F", "&#x5F;", {95}},
-        }},
-        {"cjkthai", {
+        }}},
+        {"cjkthai", Alphabet{Alphabet::AliasList{}, Alphabet::ItemList{
             {97, "\xEF\xBE\x91", "&#xFF91;", {239,190,145}},
             {98, "\xE4\xB9\x83", "&#x4E43;", {228,185,131}},
             {99, "\x63", "&#x63;", {99}},
@@ -1465,8 +1494,8 @@ namespace PseudoAlphabet
             {46, "\x2E", "&#x2E;", {46}},
             {58, "\x3A", "&#x3A;", {58}},
             {95, "\x5F", "&#x5F;", {95}},
-        }},
-        {"curvy1", {
+        }}},
+        {"curvy1", Alphabet{Alphabet::AliasList{}, Alphabet::ItemList{
             {97, "\xE0\xB8\x84", "&#xE04;", {224,184,132}},
             {98, "\xE0\xB9\x92", "&#xE52;", {224,185,146}},
             {99, "\xC6\x88", "&#x188;", {198,136}},
@@ -1541,8 +1570,8 @@ namespace PseudoAlphabet
             {46, "\xDC\x81", "&#x701;", {220,129}},
             {58, "\x3A", "&#x3A;", {58}},
             {95, "\x5F", "&#x5F;", {95}},
-        }},
-        {"curvy2", {
+        }}},
+        {"curvy2", Alphabet{Alphabet::AliasList{}, Alphabet::ItemList{
             {97, "\xCE\xB1", "&#x3B1;", {206,177}},
             {98, "\xD0\xB2", "&#x432;", {208,178}},
             {99, "\xC2\xA2", "&#xA2;", {194,162}},
@@ -1617,8 +1646,8 @@ namespace PseudoAlphabet
             {46, "\x2E", "&#x2E;", {46}},
             {58, "\x3A", "&#x3A;", {58}},
             {95, "\x5F", "&#x5F;", {95}},
-        }},
-        {"curvy3", {
+        }}},
+        {"curvy3", Alphabet{Alphabet::AliasList{}, Alphabet::ItemList{
             {97, "\xE0\xB8\x84", "&#xE04;", {224,184,132}},
             {98, "\xE0\xB9\x92", "&#xE52;", {224,185,146}},
             {99, "\xCF\x82", "&#x3C2;", {207,130}},
@@ -1693,8 +1722,8 @@ namespace PseudoAlphabet
             {46, "\x2E", "&#x2E;", {46}},
             {58, "\x3A", "&#x3A;", {58}},
             {95, "\x5F", "&#x5F;", {95}},
-        }},
-        {"fauxcyrillic", {
+        }}},
+        {"fauxcyrillic", Alphabet{Alphabet::AliasList{}, Alphabet::ItemList{
             {97, "\xD0\xB0", "&#x430;", {208,176}},
             {98, "\xD1\x8A", "&#x44A;", {209,138}},
             {99, "\xD1\x81", "&#x441;", {209,129}},
@@ -1769,8 +1798,8 @@ namespace PseudoAlphabet
             {46, "\x2E", "&#x2E;", {46}},
             {58, "\x3A", "&#x3A;", {58}},
             {95, "\x5F", "&#x5F;", {95}},
-        }},
-        {"fauxethiopic", {
+        }}},
+        {"fauxethiopic", Alphabet{Alphabet::AliasList{}, Alphabet::ItemList{
             {97, "\xE1\x88\x8D", "&#x120D;", {225,136,141}},
             {98, "\xE1\x8C\x8C", "&#x130C;", {225,140,140}},
             {99, "\xE1\x88\xAD", "&#x122D;", {225,136,173}},
@@ -1845,8 +1874,8 @@ namespace PseudoAlphabet
             {46, "\x2E", "&#x2E;", {46}},
             {58, "\x3A", "&#x3A;", {58}},
             {95, "\x5F", "&#x5F;", {95}},
-        }},
-        {"mathfraktur", {
+        }}},
+        {"mathfraktur", Alphabet{Alphabet::AliasList{"fraktur", "frakt"}, Alphabet::ItemList{
             {97, "\xE1\xB5\x91\x65", "&#x1D51E;", {240,157,148,158}},
             {98, "\xE1\xB5\x91\x66", "&#x1D51F;", {240,157,148,159}},
             {99, "\xE1\xB5\x92\x30", "&#x1D520;", {240,157,148,160}},
@@ -1921,8 +1950,8 @@ namespace PseudoAlphabet
             {46, "\x2E", "&#x2E;", {46}},
             {58, "\x3A", "&#x3A;", {58}},
             {95, "\x5F", "&#x5F;", {95}},
-        }},
-        {"rockdots", {
+        }}},
+        {"rockdots", Alphabet{Alphabet::AliasList{}, Alphabet::ItemList{
             {97, "\xC3\xA4", "&#xE4;", {195,164}},
             {98, "\xE1\xB8\x85", "&#x1E05;", {225,184,133}},
             {99, "\xC4\x8B", "&#x10B;", {196,139}},
@@ -1997,8 +2026,8 @@ namespace PseudoAlphabet
             {46, "\x2E", "&#x2E;", {46}},
             {58, "\x3A", "&#x3A;", {58}},
             {95, "\x5F", "&#x5F;", {95}},
-        }},
-        {"smallcaps", {
+        }}},
+        {"smallcaps", Alphabet{Alphabet::AliasList{}, Alphabet::ItemList{
             {97, "\xE1\xB4\x80", "&#x1D00;", {225,180,128}},
             {98, "\xCA\x99", "&#x299;", {202,153}},
             {99, "\xE1\xB4\x84", "&#x1D04;", {225,180,132}},
@@ -2073,8 +2102,8 @@ namespace PseudoAlphabet
             {46, "\x2E", "&#x2E;", {46}},
             {58, "\x3A", "&#x3A;", {58}},
             {95, "\x5F", "&#x5F;", {95}},
-        }},
-        {"stroked", {
+        }}},
+        {"stroked", Alphabet{Alphabet::AliasList{}, Alphabet::ItemList{
             {97, "\xC8\xBA", "&#x23A;", {200,186}},
             {98, "\xC6\x80", "&#x180;", {198,128}},
             {99, "\xC8\xBC", "&#x23C;", {200,188}},
@@ -2149,8 +2178,8 @@ namespace PseudoAlphabet
             {46, "\x2E", "&#x2E;", {46}},
             {58, "\x3A", "&#x3A;", {58}},
             {95, "\x5F", "&#x5F;", {95}},
-        }},
-        {"subscript", {
+        }}},
+        {"subscript", Alphabet{Alphabet::AliasList{"sub"}, Alphabet::ItemList{
             {97, "\xE2\x82\x90", "&#x2090;", {226,130,144}},
             {98, "\x62", "&#x62;", {98}},
             {99, "\x63", "&#x63;", {99}},
@@ -2225,8 +2254,8 @@ namespace PseudoAlphabet
             {46, "\x2E", "&#x2E;", {46}},
             {58, "\x3A", "&#x3A;", {58}},
             {95, "\x5F", "&#x5F;", {95}},
-        }},
-        {"superscript", {
+        }}},
+        {"superscript", Alphabet{Alphabet::AliasList{"sup", "super"}, Alphabet::ItemList{
             {97, "\xE1\xB5\x83", "&#x1D43;", {225,181,131}},
             {98, "\xE1\xB5\x87", "&#x1D47;", {225,181,135}},
             {99, "\xE1\xB6\x9C", "&#x1D9C;", {225,182,156}},
@@ -2301,8 +2330,8 @@ namespace PseudoAlphabet
             {46, "\x2E", "&#x2E;", {46}},
             {58, "\x3A", "&#x3A;", {58}},
             {95, "\x5F", "&#x5F;", {95}},
-        }},
-        {"inverted", {
+        }}},
+        {"inverted", Alphabet{Alphabet::AliasList{"inv"}, Alphabet::ItemList{
             {97, "\xC9\x90", "&#x250;", {201,144}},
             {98, "\x71", "&#x71;", {113}},
             {99, "\xC9\x94", "&#x254;", {201,148}},
@@ -2377,8 +2406,8 @@ namespace PseudoAlphabet
             {46, "\x2E", "&#x2E;", {46}},
             {58, "\x3A", "&#x3A;", {58}},
             {95, "\x5F", "&#x5F;", {95}},
-        }},
-        {"invertedbackwards", {
+        }}},
+        {"invertedbackwards", Alphabet{Alphabet::AliasList{}, Alphabet::ItemList{
             {97, "\x5F", "&#x5F;", {95}},
             {98, "\x3A", "&#x3A;", {58}},
             {99, "\x2E", "&#x2E;", {46}},
@@ -2453,8 +2482,8 @@ namespace PseudoAlphabet
             {46, "\xC9\x94", "&#x254;", {201,148}},
             {58, "\x71", "&#x71;", {113}},
             {95, "\xC9\x90", "&#x250;", {201,144}},
-        }},
-        {"reversed", {
+        }}},
+        {"reversed", Alphabet{Alphabet::AliasList{}, Alphabet::ItemList{
             {97, "\x41", "&#x41;", {65}},
             {98, "\x64", "&#x64;", {100}},
             {99, "\xE2\x86\x84", "&#x2184;", {226,134,132}},
@@ -2529,8 +2558,8 @@ namespace PseudoAlphabet
             {46, "\x2E", "&#x2E;", {46}},
             {58, "\x3A", "&#x3A;", {58}},
             {95, "\x5F", "&#x5F;", {95}},
-        }},
-        {"reversedbackwards", {
+        }}},
+        {"reversedbackwards", Alphabet{Alphabet::AliasList{}, Alphabet::ItemList{
             {97, "\x5F", "&#x5F;", {95}},
             {98, "\x3A", "&#x3A;", {58}},
             {99, "\x2E", "&#x2E;", {46}},
@@ -2605,6 +2634,6 @@ namespace PseudoAlphabet
             {46, "\xE2\x86\x84", "&#x2184;", {226,134,132}},
             {58, "\x64", "&#x64;", {100}},
             {95, "\x41", "&#x41;", {65}},
-        }},
+        }}},
     };
 }

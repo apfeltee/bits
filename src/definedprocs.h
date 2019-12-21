@@ -27,7 +27,7 @@ namespace Bits
         //DEFPROTO(sponge);
         DEFPROTO(dump);
         DEFPROTO(trim);
-        //DEFPROTO(html);
+        DEFPROTO(html);
         DEFPROTO(base64);
         DEFPROTO(rot13);
         DEFPROTO(pseudo);
@@ -41,7 +41,7 @@ namespace Bits
             //DEFITEM(sponge),
             DEFITEM(dump),
             DEFITEM(trim),
-            //DEFITEM(html),
+            DEFITEM(html),
             DEFITEM(base64),
             DEFITEM(rot13),
             DEFITEM(pseudo),

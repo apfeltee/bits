@@ -55,6 +55,19 @@ $(ent_jsonsrc):
 %.o: %.cpp $(headers)
 	$(CXX) -c $< -o $@ $(CFLAGS)
 
+src/procs/url.cpp: $(headers)
+src/procs/case.cpp: $(headers)
+src/procs/dump.cpp: $(headers)
+src/procs/html.cpp: $(headers)
+src/procs/trim.cpp: $(headers)
+src/procs/count.cpp: $(headers)
+src/procs/rot13.cpp: $(headers)
+src/procs/subst.cpp: $(headers)
+src/procs/base64.cpp: $(headers)
+src/procs/sponge.cpp: $(headers)
+src/procs/pseudo.cpp: $(headers)
+src/procs/entropy.cpp: $(headers)
+
 help:
 	@echo "available targets:"
 	@echo

@@ -24,7 +24,7 @@
 * the default behavior reads input byte by byte - even though fstream
 * uses an internal buffer, it is comparably tiny!
 */
-#define USEBUFFER 0
+#define USEBUFFER 1
 
 namespace Bits
 {
@@ -191,7 +191,7 @@ namespace Bits
                 #if (USEBUFFER == 1)
                     int tmpdest;
                     tmpdest = get();
-                    if(dest == EOF)
+                    if(tmpdest == EOF)
                     {
                         return false;
                     }
@@ -204,8 +204,8 @@ namespace Bits
                         dest = static_cast<InType>(tmpdest);
                         return true;
                     }
-                    return false;
                 #endif
+                return false;
             }
 
             void unget()

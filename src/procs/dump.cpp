@@ -25,7 +25,7 @@ namespace Bits
         * endianness - but that's a theory i don't want to test, tbh.
         * so just don't touch it.
         */
-        int codepoint(const std::vector<int>& bytevec)
+        int   codepoint(const std::vector<int>& bytevec)
         {
             using upoint_t = /* unsigned char? */ int;
             int len;
@@ -108,7 +108,7 @@ namespace Bits
         {
             char cfg_escch          = '\\';
             bool cfg_addnewline     = true;
-            bool sillymac           = false;
+            bool cfg_sillymac       = false;
             bool cfg_addslashes     = false;
             bool cfg_hexonly        = false;
             bool cfg_usecarets      = false;
@@ -116,6 +116,12 @@ namespace Bits
             bool cfg_depunicode     = false;
             bool cfg_skipnonprint   = false;
             bool cfg_skipemptylines = false;
+            
+            // state vars. this is rather dumb, actually
+            size_t g_idx = 0;
+            size_t g_chcount = 0;
+
+
 
             /** see https://en.wikipedia.org/wiki/Caret_notation#Description */
             bool CanBeCareted(int b)
@@ -235,27 +241,41 @@ namespace Bits
                     }
                     else
                     {
-                        bool ispr = (
-                            Util::String::IsSpaceOrPrintable(byte) || (byte == '\n')
-                        );
-                        if((ispr == false) && cfg_skipnonprint)
+                        // skip if -s is specified and input is non-printable, or
+                        if((Util::String::IsSpaceOrPrintable(byte) == false) && cfg_skipnonprint)
                         {
-                            if((byte == '\n') && cfg_skipemptylines)
+                            goto skip;
+                        }
+                        if(((g_chcount == 0) || (byte == '\n')) && cfg_skipemptylines)
+                        {
+                            if(std::isspace(byte))
                             {
-                                return;
+                                goto skip;
                             }
                         }
                         Util::String::EscapeByte(out, byte, cfg_addslashes, cfg_escch);
+                        if(!std::isspace(byte))
+                        {
+                            g_chcount++;
+                        }
                     }
                 }
+                skip:
                 if(byte == '\n')
                 {
                     if(cfg_addnewline)
                     {
+                        if(cfg_skipemptylines && (g_chcount == 0))
+                        {
+                            //Util::String::EscapeByte(out, byte, cfg_addslashes, cfg_escch);
+                            goto emptyline;
+                        }
                         out << '\n';
                     }
+                    emptyline:
+                    g_chcount = 0;
                 }
-                if((byte == '\r') && sillymac)
+                if((byte == '\r') && cfg_sillymac)
                 {
                     out << '\n';
                 }
@@ -288,7 +308,7 @@ namespace Bits
             });
             prs.on({"-m", "--mac"}, "assume input file(s) are Mac-style CR, instead of LF", [&]
             {
-                ds->sillymac = true;
+                ds->cfg_sillymac = true;
             });
             prs.on({"-c", "--caret"}, "use caret and 'M-' notation", [&]
             {
@@ -324,6 +344,7 @@ namespace Bits
             while((byte = inp.get()) != EOF)
             {
                 ds->dump(outp, inp, byte & 0xff);
+                ds->g_idx++;
             }
             return 0;
         }
